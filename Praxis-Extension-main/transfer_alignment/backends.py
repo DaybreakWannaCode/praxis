@@ -65,6 +65,9 @@ class QwenBackend:
     """
     def __init__(self, cfg):
         import re
+        self.answer_parser = cfg.get('answer_parser', 'legacy')
+        if self.answer_parser not in ('legacy', 'explicit_final_v2'):
+            raise ValueError('Unknown answer parser profile')
         from peft import LoraConfig, get_peft_model
         from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration
         from task_0.src.config import Cfg
@@ -127,11 +130,11 @@ class QwenBackend:
         # logits-tail auto-detection. The full-output fallback is correct but slower.
         self.metadata = {"backend": "qwen_lora_engineering", "model": model_name,
                          "revision": revision, "reference": "adapter-disabled pinned base",
-                         "target_modules": targets, "config": cfg,
+                         "target_modules": targets, "config": cfg, "answer_parser": self.answer_parser,
                          "gpu": torch.cuda.get_device_name(0)}
 
     def sample(self, item, modality, count, seed, *, greedy=False):
-        from task_0.src.rewards import parse_choice, score_completion
+        from .answer_parsing import parse_choice, score_completion
         ex = self.extractor
         was_training = self.model.training
         try:
@@ -152,9 +155,9 @@ class QwenBackend:
                     lengths = [length]
                 result = []
                 for seq, text, length in zip(seqs, texts, lengths):
-                    reward, parsed = score_completion(text, item.answer, item.action_list)
+                    reward, parsed = score_completion(text, item.answer, item.action_list, profile=self.answer_parser)
                     result.append(Response((seq, plen, vis), text, reward, parsed,
-                                           parse_choice(text, item.action_list), length,
+                                           parse_choice(text, item.action_list, profile=self.answer_parser), length,
                                            int(seq[-1]) not in ex._eos_ids))
                 return result
         finally:

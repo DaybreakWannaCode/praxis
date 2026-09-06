@@ -96,3 +96,26 @@ minimum difference before a larger study. Expand distinct scoring images to asse
 coverage, and evaluate the 1- versus 4-step window under the actual Praxis runtime.
 Keep engineering precision checks separate from the main predictive-validity and
 selection experiments. Detailed diagnostic outputs stay outside the public repo.
+
+## Versioned answer-parser correction
+
+An audit found that the legacy untagged fallback could select an option mentioned
+in the reasoning before an explicit final declaration. For example, `Option A:
+this is unsafe ... Final Answer: D.` was parsed as A. The new
+`answer_parser: "explicit_final_v2"` profile gives a line-start final answer/option/
+choice declaration precedence over that fallback. Tagged answers retain their
+existing behavior; invalid or explicitly ambiguous final choices are rejected.
+This is a targeted priority fix, not a complete semantic parser.
+
+Historical configurations without `answer_parser` retain `legacy`. New diagnostic
+configs explicitly request `explicit_final_v2`. The backend records the effective
+profile. The original Task 0 parser and released Praxis reward remain unchanged.
+Do not silently relabel archived metrics as if their gradients had used the new
+parser: changing a reward can change the RLOO advantage of every response in its
+group, and cached response rescoring does not recompute those gradients.
+
+The legacy-parser precision follow-up was stopped after discovery of this
+instrument defect, with partial outputs retained. Its cancellation is not a
+statistical stopping decision or a favorable-seed retry. The corrected follow-up
+uses a new output directory, the same declared fixed-repeat budget and seed, and
+the explicitly recorded new parser version.

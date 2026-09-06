@@ -22,6 +22,8 @@ Bounded inference calibration and repeated visual-probe diagnostics are availabl
 the model or access the final test split. The original Praxis optimizer observer and
 checkpoint sidecar are documented in [integration status](research/praxis_integration.md).
 Their boundary tests do not establish complete distributed trainer replay.
+See [measurement precision](research/measurement_precision.md) for paired evaluation,
+fixed-repeat uncertainty and the versioned explicit-final-answer parser correction.
 
 ## Start here
 
