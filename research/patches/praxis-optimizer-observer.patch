@@ -1,0 +1,38 @@
+--- a/verl/workers/actor/dp_actor.py
++++ b/verl/workers/actor/dp_actor.py
+@@ -61,6 +61,12 @@
+             self.log_probs_from_logits = torch.compile(VF.log_probs_from_logits, dynamic=True)
+         else:
+             self.log_probs_from_logits = VF.log_probs_from_logits
++
++        capture_dir = os.getenv("PRAXIS_ALIGNMENT_CAPTURE_DIR")
++        if capture_dir and actor_optimizer is not None:
++            from transfer_alignment.praxis_bridge import PraxisStepRecorder
++
++            self._alignment_observer = PraxisStepRecorder(self, capture_dir, scope="rank_local")
+ 
+     def _forward_micro_batch(self, micro_batch: Dict[str, torch.Tensor], temperature: float) -> torch.Tensor:
+         """
+--- a/verl/trainer/main.py
++++ b/verl/trainer/main.py
+@@ -16,6 +16,7 @@
+ """
+ 
+ import json
++import os
+ 
+ import ray
+ from omegaconf import OmegaConf
+@@ -99,7 +100,11 @@
+ 
+     if not ray.is_initialized():
+         # this is for local ray cluster
+-        ray.init(runtime_env={"env_vars": {"TOKENIZERS_PARALLELISM": "true", "NCCL_DEBUG": "WARN"}})
++        env_vars = {"TOKENIZERS_PARALLELISM": "true", "NCCL_DEBUG": "WARN"}
++        for key in ("PRAXIS_ALIGNMENT_CAPTURE_DIR", "PYTHONPATH"):
++            if key in os.environ:
++                env_vars[key] = os.environ[key]
++        ray.init(runtime_env={"env_vars": env_vars})
+ 
+     runner = Runner.remote()
+     ray.get(runner.run.remote(ppo_config))
