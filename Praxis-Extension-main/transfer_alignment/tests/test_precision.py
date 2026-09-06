@@ -63,3 +63,11 @@ class PrecisionTests(unittest.TestCase):
             probe=[json.loads(line) for line in (out/'probe_responses.jsonl').read_text().splitlines()]
             self.assertFalse({r['seed'] for r in rows}&{r['seed'] for r in probe})
             self.assertTrue((out/'scores_sealed.json').exists())
+
+    def test_response_record_preserves_exact_tokens(self):
+        from transfer_alignment.backends import Response
+        from transfer_alignment.experiment import response_record
+        response=Response((torch.tensor([10,20,30]),2,{}),'A',1.,True,'A',1)
+        row=response_record(response,synthetic_items()[8],7,'probe')
+        self.assertEqual(row['sequence_token_ids'],[10,20,30])
+        self.assertEqual(row['prompt_length'],2)

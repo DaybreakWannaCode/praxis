@@ -1,8 +1,9 @@
 # Measurement precision follow-up
 
 This supplements the master protocol. It changes how uncertainty and parent/child
-outcome differences are measured; it does not change the correctness objective,
-parser, text reward or optimizer.
+outcome differences are measured; those changes preserve the correctness
+objective, text reward and optimizer. A separate versioned parser bug fix is
+documented below and must be treated as a scoring-version change.
 
 ## Two separate sources of uncertainty
 
@@ -119,3 +120,15 @@ instrument defect, with partial outputs retained. Its cancellation is not a
 statistical stopping decision or a favorable-seed retry. The corrected follow-up
 uses a new output directory, the same declared fixed-repeat budget and seed, and
 the explicitly recorded new parser version.
+
+Newer response records include exact sequence token IDs and prompt length for
+Qwen responses. Those support later re-scoring and teacher-forced replay with the
+pinned prompt/image preprocessing; text decoding alone need not uniquely identify
+the sampled token sequence. The in-flight corrected diagnostic at commit cfa0432
+checks decoded response, reward and length equality for its null control; token-ID
+comparison was added afterward for future runs.
+
+The saved text updates used by the corrected diagnostic retain their original
+training provenance. No text updates are rerun under the new parser. If future
+correctness-only training enables the new parser, record that as a new training
+reward version too; do not expect it to recreate legacy-parser optimizer steps.

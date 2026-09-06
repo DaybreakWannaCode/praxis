@@ -70,12 +70,15 @@ def paired_outcomes(backend, items, child, output, *, count=4, seed=20260909):
                 for j,row in enumerate(table[key]):append_json(output/'responses.jsonl',dict(row,sample=j))
             print('Outcome arm complete:',label,flush=True)
         identical=all(all(a['text']==b['text'] and a['correct']==b['correct'] and a['length']==b['length']
+                          and a.get('sequence_token_ids')==b.get('sequence_token_ids')
                           for a,b in zip(table['parent',i.id],table['null',i.id])) for i in items)
         if not identical:raise AssertionError("Identical-policy paired generation failed replay")
         changes={}
         for label in ('child_paired','child_independent'):
             changes[label]={i.id:statistics.mean(b['correct']-a['correct'] for a,b in zip(table['parent',i.id],table[label,i.id])) for i in items}
-        result={"null_exact_replay":identical,"paired":mean_se(list(changes['child_paired'].values())),
+        result={"null_exact_replay":identical,
+                "replay_comparison":"token_ids" if 'sequence_token_ids' in table['parent',items[0].id][0] else 'decoded_response',
+                "paired":mean_se(list(changes['child_paired'].values())),
                 "independent":mean_se(list(changes['child_independent'].values())),"per_image_changes":changes,
                 "sampled_correctness":{label:statistics.mean(r['correct'] for i in items for r in table[label,i.id]) for label in ('parent','null','child_paired','child_independent')},
                 "paired_response_change_fraction":statistics.mean(a['text']!=b['text'] for i in items for a,b in zip(table['parent',i.id],table['child_paired',i.id])),

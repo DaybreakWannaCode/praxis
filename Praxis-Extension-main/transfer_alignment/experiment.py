@@ -44,10 +44,15 @@ def reward_function(profile):
 
 
 def response_record(response, item, seed, kind):
-    return {"item_id": item.id, "group_id": item.group_id, "split": item.split,
+    record = {"item_id": item.id, "group_id": item.group_id, "split": item.split,
             "seed": seed, "kind": kind, "answer": response.answer,
             "correct": response.reward, "parsed": response.parsed,
             "length": response.length, "truncated": response.truncated, "text": response.text}
+    payload = response.payload
+    if isinstance(payload, tuple) and len(payload) == 3 and isinstance(payload[0], torch.Tensor):
+        record["sequence_token_ids"] = payload[0].detach().cpu().tolist()
+        record["prompt_length"] = int(payload[1])
+    return record
 
 
 def visual_gradient(backend, items, group_size, seed, *, on_item=None):
