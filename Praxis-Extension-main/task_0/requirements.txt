@@ -1,0 +1,12 @@
+# Colab already ships torch, numpy, matplotlib, requests, pillow and scipy.
+# Qwen2.5-VL needs a reasonably recent transformers; 4.49 is the first release with
+# Qwen2_5_VLForConditionalGeneration.
+transformers>=4.51
+accelerate>=0.34
+huggingface_hub>=0.24
+pyyaml>=6.0
+pillow>=10.0
+requests>=2.31
+numpy>=1.24
+matplotlib>=3.7
+scipy>=1.11          # only for the acid test's exact variance-ratio CI; there is a fallback

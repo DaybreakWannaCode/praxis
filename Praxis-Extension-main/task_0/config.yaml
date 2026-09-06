@@ -1,0 +1,125 @@
+# Task 0 — cross-modal gradient alignment measurement apparatus.
+# Every number the study reports is a function of this file plus the seeds below.
+
+model:
+  # The checkpoint whose alignment we measure. Task 0 uses the base model; Task 1 will
+  # point this at successive training checkpoints while everything else stays fixed.
+  name: Qwen/Qwen2.5-VL-3B-Instruct
+  dtype: bfloat16
+  attn_implementation: sdpa        # "flash_attention_2" if installed
+  gradient_checkpointing: true
+  # Vision token budget. Qwen2.5-VL emits (H/28)*(W/28)/4 tokens per image; capping this
+  # is the single biggest lever on prompt length, hence on both memory and wall-clock.
+  min_pixels: 3136                 # 4 * 28 * 28
+  max_pixels: 200704               # 256 * 28 * 28  -> <= 256 vision tokens
+
+backbone:
+  # "the block training will actually move": language layers only. The vision tower and
+  # the merger/projector are excluded — grad J_t is identically zero there, so including
+  # them would only add zeros to <g_v, g_t> while doubling gradient memory.
+  exclude_name_patterns: ["visual", "vision", "merger", "patch_embed", "image_newline"]
+  include_name_patterns: []        # empty = everything not excluded
+  # Qwen2.5-3B ties lm_head to embed_tokens. Counting a tied tensor twice would
+  # double-weight ~311M coordinates in the inner product. Always keep this on.
+  dedupe_tied: true
+
+policy:
+  # These MUST describe the distribution we actually sample from, because the score
+  # function grad log pi is computed against exactly this distribution. Qwen ships a
+  # generation_config with top_k=50/top_p=0.8/temperature=0.7 baked in; sampling from a
+  # truncated distribution while differentiating the untruncated softmax is a silent bias.
+  # See gradient.py::_generation_config — these values are forced, not defaulted.
+  temperature: 1.0
+  top_p: 1.0
+  top_k: 0                         # 0 = disabled
+  repetition_penalty: 1.0
+  max_new_tokens: 256
+  system_prompt: |-
+    You are a helpful AI Assistant, designed to provided well-reasoned and detailed responses. You FIRST think about the reasoning process as an internal monologue and then provide the user with the answer. The reasoning process MUST BE enclosed within <think> and </think> tags, and the final answer MUST BE enclosed within <answer> and </answer> tags.
+
+grpo:
+  # "verl" reproduces verl/trainer/core_algos.py::compute_grpo_outcome_advantage plus
+  # verl's default token-mean loss aggregation -> comparable to what Task 1 will optimise.
+  # "spec" is the literal Task 0 brief: sequence-SUM log-prob, advantage centred only.
+  # Both are computed from the same cache; `convention` only picks the headline number.
+  convention: verl                 # verl | spec
+  loss_agg: batch_token_mean       # batch_token_mean | seq_mean | seq_sum
+  normalize_adv_by_std: true
+  adv_eps: 1.0e-6                  # SHARED WITH TASK 1 TRAINING. Do not diverge.
+  adv_std_floor: 0.0               # extra floor on the group std; 0.0 = pure verl
+
+data:
+  hf_repo: zhehuderek/VIVA_Benchmark_EMNLP24
+  annotation_file: VIVA_annotation.json
+  images_dir: data/VIVA_images     # pre-downloaded images land here
+  calibration_file: data/viva_calibration.json
+  # Where the sketched gradient cache lives. null = results/cache. The cache is a numpy
+  # memmap, so it needs fast LOCAL disk — point this at /content/cache in Colab when
+  # results/ is symlinked to Drive. memmap over Drive's FUSE mount is slow and flaky.
+  cache_dir: null
+  # Text channel for g_t. "situation_description" is VIVA's own scene summary: fixed
+  # benchmark data, independent of the checkpoint under measurement, and it does not
+  # name the correct action. "self_caption" regenerates captions with caption_model.
+  text_channel: situation_description   # situation_description | self_caption
+  caption_model: Qwen/Qwen2.5-VL-3B-Instruct   # only used when text_channel=self_caption
+  n_pool: 400                      # calibration pool size; must be >= max(study.n_values)
+  seed: 0
+
+sampling:
+  # K generations per (item, modality), drawn once and reused. Groups of size G are then
+  # bootstrapped from this pool. K must exceed max(study.G_values) by a healthy margin.
+  K: 32
+  gen_batch: 32                    # generations issued per model.generate call
+
+sketch:
+  # Per-tensor block-sign sketch: (Sx)_b = sum_{k in block b} sigma_k x_k, sigma ~ +-1 fixed.
+  # E<Sx,Sy> = <x,y> exactly; Var ~ ||x||^2 ||y||^2 / m. Lets us cache 25.6k gradients
+  # (m floats each) instead of 25.6k x 3.09e9. Sized so sketch noise << resample noise:
+  # relative sketch error on Lambda ~ 1 / (|alpha| * sqrt(m)).
+  enabled: true
+  m_target: 262144                 # 2^18; realised m is sum of per-tensor block counts
+  # Cache size is 2 * n_pool * K * m * 2 bytes: 13.4 GB at m=2^18, 26.8 GB at 2^19.
+  # --auto-m will raise m_target toward what the measured |alpha| needs, but never past this.
+  m_max: 524288                    # 2^19
+  cache_budget_gb: 30              # disk the cache may use; drives the anchor's m advice
+  seed: 1234
+  device: cuda                     # sign vectors cost ~d bytes (int8) on this device
+  store_dtype: float16             # per-vector fp32 scale is stored alongside
+
+study:
+  n_values: [50, 100, 200, 400]
+  G_values: [4, 8, 16]
+  n_resamples: 30                  # spec asks for 20-50
+  anchor: {n: 200, G: 8}           # the cell the acceptance criteria are judged on
+  item_resample: bootstrap         # bootstrap | subsample
+  group_resample: bootstrap        # bootstrap | subsample_fpc  (fallback if acid test fails)
+  # "crossfit" splits items so g_v and g_t come from disjoint halves -> unbiased for
+  # <grad J_v, grad J_t>. "paired" uses the same items for both, which is what the brief
+  # literally says but carries a positive O(1/n) bias from shared item noise. Both reported.
+  estimator: crossfit              # crossfit | paired
+  n_boot: 2000                     # within-measurement item bootstrap for the CI
+  device: auto                     # where the cached sketch matrix lives during the study
+  seed: 7
+
+exact_anchor:
+  # Full-backbone, unsketched Lambda at the anchor cell. Anchors the absolute number and
+  # tells us the true |alpha|, which is what justifies the chosen sketch dimension m.
+  enabled: true
+  n_reps: 3
+  n: null                          # null = follow study.anchor.n (keeps the two comparable)
+  G: null                          # null = follow study.anchor.G
+  accum_device: auto               # auto | cuda | cpu  (fp32 accumulator, ~12.4 GB)
+
+acid_test:
+  # The gate the user attached to bootstrap-with-replacement: does the bootstrap's std
+  # actually reproduce the std of genuinely fresh generations? Same n, same G, same items.
+  enabled: true
+  n: 50
+  G: 8
+  n_fresh: 10                      # fresh full re-generations; 10 gives a wide but usable band
+  # If the variance ratio CI excludes 1.0, fall back to study.group_resample=subsample_fpc.
+  fail_action: warn                # warn | raise
+
+acceptance:
+  sign_stability_min: 0.95
+  ci_halfwidth_frac_max: 0.25      # bootstrap CI half-width / |Lambda| at the anchor

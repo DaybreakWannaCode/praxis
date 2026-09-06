@@ -1,0 +1,22 @@
+# Reference materials remain local; do not publish PDFs, weights, data or logs.
+*.pdf
+Praxis-VLM-main/
+Praxis-Extension-main/praxis_theory/
+Praxis-Extension-main/task_0/run_task0.ipynb
+**/__pycache__/
+*.py[cod]
+.DS_Store
+.venv/
+**/data/
+**/results/
+**/runs/
+**/cache/
+*.pt
+*.pth
+*.safetensors
+*.npz
+.env
+.env.*
+*.pem
+*.key
+*.log

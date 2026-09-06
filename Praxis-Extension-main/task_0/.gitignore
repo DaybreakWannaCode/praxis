@@ -1,0 +1,7 @@
+# VIVA images are third-party content downloaded at setup time, not ours to redistribute.
+data/VIVA_images/
+# The gradient cache is 13-27 GB of derived data; rebuild it, do not commit it.
+results/cache/
+__pycache__/
+*.pyc
+.DS_Store

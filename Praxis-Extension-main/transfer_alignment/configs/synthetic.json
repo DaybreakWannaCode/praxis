@@ -1,0 +1,16 @@
+{
+  "seed": 20260906,
+  "candidates": 2,
+  "batch_size": 2,
+  "warmup_steps": 2,
+  "branch_steps": 1,
+  "text_group_size": 8,
+  "probe_group_size": 16,
+  "eval_samples": 32,
+  "lr": 0.01,
+  "weight_decay": 0.01,
+  "max_grad_norm": 1.0,
+  "clip_ratio": 0.2,
+  "kl_coef": 0.01,
+  "reward_profile": "correctness_only"
+}
