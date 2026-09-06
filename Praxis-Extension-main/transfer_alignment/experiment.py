@@ -50,7 +50,7 @@ def response_record(response, item, seed, kind):
             "length": response.length, "truncated": response.truncated, "text": response.text}
 
 
-def visual_gradient(backend, items, group_size, seed):
+def visual_gradient(backend, items, group_size, seed, *, on_item=None):
     if not items or any(i.split != "score" for i in items):
         raise ValueError("Visual gradient requires nonempty V_score only")
     model = backend.model
@@ -58,6 +58,7 @@ def visual_gradient(backend, items, group_size, seed):
     records = []
     degenerate = 0
     for item in items:
+        item_g = {n: torch.zeros_like(v) for n, v in g.items()} if on_item else None
         item_seed = derived_seed(seed, "visual_gradient", item.id)
         samples = backend.sample(item, "image", group_size, item_seed)
         adv = loo_advantages([s.reward for s in samples])
@@ -72,7 +73,13 @@ def visual_gradient(backend, items, group_size, seed):
             loss.backward()
             for n, p in trainables(model).items():
                 if p.grad is not None:
-                    g[n].add_(p.grad.detach().float().cpu())
+                    contribution = p.grad.detach().float().cpu()
+                    g[n].add_(contribution)
+                    if item_g is not None:
+                        item_g[n].add_(contribution)
+        if on_item is not None:
+            # Undo only the across-image averaging for item-level diagnostics.
+            on_item(item, {n: v.mul_(len(items)) for n, v in item_g.items()})
     model.zero_grad(set_to_none=True)
     if not all(torch.isfinite(x).all() for x in g.values()):
         raise FloatingPointError("Nonfinite visual gradient")
