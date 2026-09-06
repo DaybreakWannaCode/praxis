@@ -104,9 +104,12 @@ class QwenBackend:
             model_name, revision=revision, local_files_only=cfg.get("local_files_only", True),
             min_pixels=4*28*28, max_pixels=cfg["max_pixels"],
         )
+        gen_batch = cfg.get("generation_batch_size", 1)
+        if not isinstance(gen_batch, int) or not 1 <= gen_batch <= 8:
+            raise ValueError("generation_batch_size must be between 1 and 8")
         extractor_cfg = Cfg({"policy": {"temperature": 1.0, "max_new_tokens": cfg["max_new_tokens"],
                               "top_p": 1.0, "top_k": 0, "repetition_penalty": 1.0,
-                              "system_prompt": cfg["system_prompt"]}, "sampling": {"gen_batch": 1}})
+                              "system_prompt": cfg["system_prompt"]}, "sampling": {"gen_batch": gen_batch}})
 
         class Extractor(PolicyGradientExtractor):
             def _messages(self, item, modality):
