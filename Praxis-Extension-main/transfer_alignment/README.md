@@ -22,6 +22,11 @@ Use a dedicated Python 3.11 environment. Install the compatible CUDA PyTorch bui
 the host, then install `requirements-gpu.txt` and save `pip freeze`. The initial pins are
 not yet a verified GPU environment lock. Do not alter the shared system environment.
 
+The repository also provides `scripts/setup_environment.sh CONDA_PATH ENV_PREFIX`.
+It uses the dedicated interpreter by absolute path, validates its prefix, and runs
+CPU-only checks. This avoids accidentally installing into an inherited active venv.
+Run setup in a named tmux session on a remote host; keep its log under ignored `runs/`.
+
 1. Check current GPU utilization. The engineering script is not a scheduler; do not run
    while another job consumes the device.
 2. Make a local copy of `configs/qwen_smoke.json`. Set `revision` to the model's pinned

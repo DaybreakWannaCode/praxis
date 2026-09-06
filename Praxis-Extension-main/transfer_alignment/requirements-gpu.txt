@@ -1,5 +1,6 @@
 # Initial compatibility pins; validate on the Ada host and retain pip freeze per run.
 torch==2.8.0
+torchvision==0.23.0
 transformers==4.57.1
 peft==0.17.1
 accelerate==1.10.1
