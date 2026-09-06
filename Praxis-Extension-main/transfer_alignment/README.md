@@ -52,6 +52,44 @@ The fixed reference policy is the pinned base with adapters disabled. The full p
 snapshot covers base weights and buffers; compact child checkpoints are only valid
 relative to that parent. A different reference checkpoint needs an explicit backend.
 
+## Bounded measurement calibration
+
+After the two-branch smoke, use fresh development images to check truncation and
+answer parsing without training. `generation_batch_size` may be set from 1 to 8;
+record it along with the token cap because batching can affect sampled outputs.
+Use the same pinned model configuration and the smoke's trusted full parent.
+
+```bash
+python -m transfer_alignment.calibrate --config /path/to/config512.json \
+  --manifest /path/to/calibration-manifest.json --parent /path/to/parent.pt \
+  --output runs/calibration-512
+```
+
+The defaults use eight samples per image. The runner bounds the number of images,
+logs response-level parsing/correctness/truncation, and verifies that trainable
+parameters did not change. A comparison using different images is not a controlled
+comparison of generation settings.
+
+Next, repeat the visual gradient twice on a fixed scoring set and repeat the previous
+development evaluation with an independent seed. The scoring and development sets
+must be separate. Keep the generation configuration unchanged except for `seed`.
+
+```bash
+python -m transfer_alignment.stability --config /path/to/stability-config.json \
+  --manifest /path/to/stability-manifest.json --parent /path/to/parent.pt \
+  --delta /path/to/branch_0_step_0_delta.pt \
+  --delta /path/to/branch_1_step_0_delta.pt \
+  --previous-outcomes runs/calibration-512/items.jsonl \
+  --output runs/stability-512
+```
+
+`summary.json` describes the two gradient estimates. `completed.json` is written
+only after the additional outcome repeat and `null-outcome.json` are complete.
+An unchanged-parent difference measures sampling variability in this small check;
+one repeat does not establish a population noise distribution or statistical power.
+Do not select favorable repeat seeds or treat two candidate ranks as scientific
+validation. Keep all diagnostic artifacts outside Git.
+
 ## Manifest schema
 
 For the public Praxis corpus, `python -m transfer_alignment.prepare` converts a local

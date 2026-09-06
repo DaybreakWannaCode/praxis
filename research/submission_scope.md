@@ -21,14 +21,22 @@ The optional analysis budget is about 10-15%, subordinate to independent predict
 and selection versus random. The full-parameter production backend has priority over
 expanding local adapter experiments.
 
-## Current local implementation evidence
+## Implementation evidence (updated 7 September 2026)
 
-Twelve CPU unit/integration checks passed on Python 3.9.6, PyTorch 2.8.0,
-NumPy 2.0.2. Checks cover an exactly enumerated RLOO expectation, finite differences,
+The CPU checks cover an exactly enumerated RLOO expectation, finite differences,
 FP64 reduction, RNG isolation, warm Adam/scheduler/reference restoration, clipping/KL,
 split rejection, two-branch end-to-end replay, response-token masking, temperature,
 EOS handling and sequence-summed visual gradient extraction. This is engineering evidence only.
 
-Qwen weights, real visual outcomes, GPU memory fit, distributed Praxis parity and
-training-effect detectability have not yet been validated. Full checkpoint storage and
-scoring overhead must be measured on the actual machine before scaling.
+The first pinned Qwen3B LoRA two-branch smoke completed on an H100, including exact
+branch replay and independent real-image outcomes. A bounded generation calibration
+also completed. Detailed results and provenance remain outside Git in the local run
+archive. These establish the small backend's operation, not a transfer benefit.
+
+The original Praxis optimizer boundary has an opt-in observer and an additional
+checkpoint sidecar for exposed rollout-manager RNG state. See
+[integration status](praxis_integration.md) for tested behavior and limitations.
+Distributed Praxis parity, complete rollout replay, full-parameter memory fit and
+training-effect detectability remain unvalidated. Repeated probe and no-update
+outcome checks precede scaling; full checkpoint storage and scoring overhead must
+be measured for the production backend.

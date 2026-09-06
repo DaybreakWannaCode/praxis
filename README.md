@@ -17,6 +17,12 @@ Detailed measurements and run outputs remain in the ignored local runs folder.
 Distributed/full-parameter Praxis parity is not yet verified, and
 this tiny engineering run does not establish a VLM transfer benefit.
 
+Bounded inference calibration and repeated visual-probe diagnostics are available in
+`transfer_alignment.calibrate` and `transfer_alignment.stability`. They do not train
+the model or access the final test split. The original Praxis optimizer observer and
+checkpoint sidecar are documented in [integration status](research/praxis_integration.md).
+Their boundary tests do not establish complete distributed trainer replay.
+
 ## Start here
 
 ```bash
