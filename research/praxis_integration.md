@@ -85,6 +85,23 @@ iterator. End-to-end rollout replay remains a required production check.
 
 ## Remaining gates before claiming production integration
 
+### Candidate environment, not a tested lock
+
+The original source's minimum vLLM version is 0.7.3. Its published
+[package metadata](https://pypi.org/pypi/vllm/0.7.3/json) requires PyTorch 2.5.1,
+torchvision 0.20.1, torchaudio 2.5.1, NumPy below 2 and, on Linux x86-64,
+xformers 0.0.28.post3. Transformers 4.49.0 is a candidate matching the original
+minimum: its [tagged Qwen source](https://github.com/huggingface/transformers/blob/v4.49.0/src/transformers/models/qwen2_5_vl/modeling_qwen2_5_vl.py)
+contains the older attention implementation referenced by Praxis.
+
+These are compatibility starting points, not an installed or resolved environment.
+Flash-attention ABI, Ray, torchdata, tensordict and the original vLLM private
+interfaces still require validation. Build a separate Python 3.11 environment and
+record the resolved lock and import checks before attempting the bounded baseline;
+do not downgrade the working PyTorch 2.8 calibration environment in place.
+
+### Execution gates
+
 - Pin the original source commit or immutable snapshot, reward, model and data;
   validate a short uninstrumented text-only baseline with the original trainer.
 - Repeat identical fixed-rollout optimizer work with instrumentation enabled and
