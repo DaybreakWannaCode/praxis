@@ -165,6 +165,9 @@ def evaluate(backend, items, count, seed, label):
 
 def run(backend, items, candidates, cfg, output):
     """Score all candidates first, replay them exactly, then evaluate saved children."""
+    coupling = cfg.get("evaluation_coupling", "independent")
+    if coupling not in ("paired", "independent"):
+        raise ValueError("evaluation_coupling must be paired or independent")
     output = Path(output)
     output.mkdir(parents=True, exist_ok=False)
     model = backend.model
@@ -257,6 +260,7 @@ def run(backend, items, candidates, cfg, output):
                 raise ValueError("Child belongs to a different parent")
             restore(checkpoint["state"], model, optimizer, scheduler)
             result, rows = evaluate(backend, dev_items, cfg["eval_samples"],
+                                    derived_seed(seed, "eval_parent") if coupling == "paired" else
                                     derived_seed(seed, "eval_child", b), f"branch_{b}")
             for r in rows:
                 append_json(output/"evaluations.jsonl", r)
@@ -275,7 +279,8 @@ def run(backend, items, candidates, cfg, output):
         write_json(output/"summary.json", {"evidence": backend.metadata["backend"],
                    "parent": base, "branches": outcomes, "scores_digest": score_digest,
                    "seconds": time.monotonic()-started,
-                   "note": "Engineering V_dev outcomes; shared parent errors are correlated. No significance claim."})
+                   "evaluation_coupling": coupling,
+                   "note": "Engineering V_dev outcomes; shared parent errors are correlated. Empirical zero SE does not establish equivalence. No significance claim."})
         metadata["status"] = "complete"
         metadata["parent_id"] = parent_id
         write_json(output/"manifest.json", metadata)

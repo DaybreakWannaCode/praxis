@@ -47,3 +47,19 @@ class PrecisionTests(unittest.TestCase):
             self.assertEqual(json.loads((out/'manifest.json').read_text())['status'],'complete')
             self.assertTrue((out/'completed.json').exists())
             self.assertEqual(digest(weights(b.model)),digest(parent))
+
+    def test_branch_runner_pairs_outcome_seeds_only(self):
+        from transfer_alignment.experiment import run as branches
+        import json
+        cfg=json.loads((Path(__file__).parents[1]/'configs/synthetic.json').read_text())
+        cfg['evaluation_coupling']='paired'
+        items=synthetic_items()
+        with tempfile.TemporaryDirectory() as tmp:
+            out=Path(tmp)/'run'
+            branches(TinyBackend(),items,[items[:2],items[2:4]],cfg,out)
+            rows=[json.loads(line) for line in (out/'evaluations.jsonl').read_text().splitlines()]
+            for item in (i for i in items if i.split=='dev'):
+                self.assertEqual(len({r['seed'] for r in rows if r['item_id']==item.id}),1)
+            probe=[json.loads(line) for line in (out/'probe_responses.jsonl').read_text().splitlines()]
+            self.assertFalse({r['seed'] for r in rows}&{r['seed'] for r in probe})
+            self.assertTrue((out/'scores_sealed.json').exists())
