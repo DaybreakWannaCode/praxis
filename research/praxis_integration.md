@@ -57,6 +57,17 @@ If attaching to an existing Ray cluster, configure the same environment on its
 workers explicitly. The driver's environment alone is not an installation on
 other machines. Keep capture outputs outside Git.
 
+An additional opt-in patch, `patches/praxis-rollout-state.patch`, writes/loads a
+sidecar at the original worker checkpoint boundary. `praxis_state.py` captures
+module modes, process RNG and the rollout manager's persistent `torch_random_states`,
+`gen_random_states` and `freed_bytes`. These manager attributes are distinct from
+the process RNG already saved by the original checkpoint manager. Tests verify
+restoration and reject a changed rank/world-size topology. Apply this patch in
+addition to the optimizer patch when testing checkpoint replay. An enabled load
+requires its matching sidecar; do not silently fall back to incomplete state.
+It still does not serialize vLLM requests/engine internals or the driver data
+iterator. End-to-end rollout replay remains a required production check.
+
 ## Findings that affect baseline reproduction
 
 1. The current public text dataset uses `problem`; the supplied MCQ launcher

@@ -1,4 +1,5 @@
 {
   "verl/workers/actor/dp_actor.py": "98be5f2e49d207f59a7ef54840413ec6a4e0300a0c516f671154be8573efad71",
-  "verl/trainer/main.py": "cce889862066197508cbc5a3ee95a1f97d9b57035b1e423b7e1b08f1e3d32316"
+  "verl/trainer/main.py": "cce889862066197508cbc5a3ee95a1f97d9b57035b1e423b7e1b08f1e3d32316",
+  "verl/workers/fsdp_workers.py": "ad8a3b84031047254ab23b37a3e480ba8a05dbd39011210bbaa505078631fc9a"
 }

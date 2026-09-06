@@ -1,0 +1,32 @@
+--- a/verl/workers/fsdp_workers.py
++++ b/verl/workers/fsdp_workers.py
+@@ -15,6 +15,7 @@
+ The main entry point to run the PPO algorithm
+ """
+ 
++import os
+ from typing import Literal, Optional, Union
+ 
+ import numpy as np
+@@ -399,6 +400,10 @@
+             load_fsdp_model(self.fsdp_module)
+ 
+         self.checkpoint_manager.save_checkpoint(path)
++        if os.getenv("PRAXIS_ALIGNMENT_CAPTURE_DIR"):
++            from transfer_alignment.praxis_state import save_sidecar
++
++            save_sidecar(self, path)
+         dist.barrier()
+         if self._use_param_offload:
+             offload_fsdp_model(self.fsdp_module)
+@@ -409,6 +414,10 @@
+             load_fsdp_model(self.fsdp_module)
+ 
+         self.checkpoint_manager.load_checkpoint(path)
++        if os.getenv("PRAXIS_ALIGNMENT_CAPTURE_DIR"):
++            from transfer_alignment.praxis_state import load_sidecar
++
++            load_sidecar(self, path)
+         dist.barrier()
+         if self._use_param_offload:
+             offload_fsdp_model(self.fsdp_module)
