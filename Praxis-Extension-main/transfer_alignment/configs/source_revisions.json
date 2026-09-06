@@ -1,0 +1,17 @@
+{
+  "verified_on": "2026-09-07",
+  "purpose": "engineering data preparation; not a final paper split",
+  "text": {
+    "repository": "zhehuderek/textual_decisionmaking_data",
+    "revision": "9724bba24752a793369dee7e71ac1bb75db47404",
+    "file": "data/train-00000-of-00001.parquet",
+    "prompt_field": "problem",
+    "answer_field": "answer"
+  },
+  "visual": {
+    "repository": "zhehuderek/VIVA_Benchmark_EMNLP24",
+    "revision": "75e6aed088b1e9fc6175d66a9e02b48e5f801982",
+    "file": "VIVA_annotation.json",
+    "images": "separately obtained and checksummed; not included in Git"
+  }
+}

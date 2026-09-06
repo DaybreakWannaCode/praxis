@@ -1,0 +1,2 @@
+# Optional local Parquet input conversion; not needed by the branch runner itself.
+pyarrow==20.0.0

@@ -54,6 +54,21 @@ relative to that parent. A different reference checkpoint needs an explicit back
 
 ## Manifest schema
 
+For the public Praxis corpus, `python -m transfer_alignment.prepare` converts a local
+training Parquet/JSON file plus VIVA annotations and local images into a small manifest.
+Install `requirements-data.txt` to read Parquet. The helper requires full dataset
+revision SHAs, writes file/image checksums, rejects unknown prompt layouts, and strips
+the instruction to output only a choice when rebuilding the engineering prompt.
+It uses the released `problem` field (the old launcher specifies `question`). It never
+uses assistant messages or gold rationales as input, and does not download files.
+
+```bash
+python -m transfer_alignment.prepare --help
+```
+
+The emitted split is for engineering only. It excludes exact duplicate image files,
+URLs and descriptions but still needs a semantic scene-family audit for paper use.
+
 JSON list, one object per situation. All fields below except `situation` and `image_path`
 are required. Paths are relative to the manifest; image files are decoded during validation.
 
