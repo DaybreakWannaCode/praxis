@@ -1,6 +1,10 @@
 # RunPod: first GPU smoke test
 
-Status: preparation only; no pod has been provisioned by this project.
+Status: the user provisioned one H100 PCIe with a 100GB network volume.
+Python 3.11, all 15 unit tests, synthetic branch replay and a BF16 CUDA computation
+have passed on that host. The real Qwen two-branch run also completed; detailed
+measurements remain in the ignored runs folder. Environment checks and a tiny
+branch run alone are not transfer evidence.
 
 Use one on-demand GPU Pod with SSH access. Preferred starting hardware is an
 A100 80GB; an A40/A6000 48GB is a lower-cost alternative for the current 3B LoRA
@@ -36,9 +40,19 @@ bash scripts/setup_environment.sh /actual/conda/path /workspace/envs/praxis-alig
 ```
 
 The setup script isolates dependencies and runs CPU checks. It does not download
-model weights or launch training. If the template has no conda, prepare an
-isolated Python 3.11 environment before installing the pinned requirements;
-do not install into the template's base environment by accident.
+model weights or launch training. The H100 template inspected on 2026-09-07 had
+`/usr/bin/uv` and `/usr/bin/python3.11`, while its default Python was 3.12. Use
+the alternative installer on a template with those tools:
+
+```bash
+export UV_CACHE_DIR=/workspace/cache/uv
+export HF_HOME=/workspace/cache/huggingface
+bash scripts/setup_uv_environment.sh /usr/bin/uv /usr/bin/python3.11 /workspace/envs/praxis-alignment
+```
+
+Always inspect executable paths on a new template. Store dependency manifests
+with each run. Initial downloads and environment creation on the network volume
+took several minutes; preserve the environment for subsequent runs.
 
 ## Execution gate
 

@@ -11,8 +11,11 @@ and an **actual** text optimizer displacement. Cosine and norms are diagnostics.
 Engineering milestone: a CPU synthetic backend and a single-GPU Qwen2.5-VL-3B LoRA
 backend share an estimator, optimizer/state restoration, sequential candidate branches,
 exact dot products, and independent parent/child evaluation. The synthetic backend is
-tested locally. Real Qwen execution and distributed/full-parameter Praxis parity are
-not yet verified. No VLM transfer result is claimed.
+tested locally. The first real Qwen two-branch smoke test also completed on an H100:
+both branches replayed exactly and independent visual evaluation completed.
+Detailed measurements and run outputs remain in the ignored local runs folder.
+Distributed/full-parameter Praxis parity is not yet verified, and
+this tiny engineering run does not establish a VLM transfer benefit.
 
 ## Start here
 
