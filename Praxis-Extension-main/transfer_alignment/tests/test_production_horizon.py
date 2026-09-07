@@ -107,6 +107,8 @@ class HorizonWorkerTests(unittest.TestCase):
         worker = Worker()
         worker.update_actor(None)
         initial = {k:p.detach().clone() for k,p in parameters(worker).items()}
+        recovery_worker = copy.deepcopy(worker)
+        real_torch_load = torch.load
         reference = Worker()
         reference.fsdp_module.load_state_dict(copy.deepcopy(worker.fsdp_module.state_dict()))
         reference.optimizer.load_state_dict(copy.deepcopy(worker.optimizer.state_dict()))
@@ -140,6 +142,33 @@ class HorizonWorkerTests(unittest.TestCase):
             from transfer_alignment.production_horizon import validate_horizon_export
             report = json.loads((root/'parity.json').read_text())
             validate_horizon_export(root, report, 4)
+            # Recover exact saved optimizer inputs even if the fresh driver
+            # supplies different batch tensors. This is not driver RNG replay.
+            recovery = Path(folder)/'recovery'
+            with patch.dict(os.environ, {'PRAXIS_H4_RECOVERY_DIR':str(root),
+                                        'PRAXIS_PARITY_DIR':str(recovery)}), \
+                    patch('torch.load', side_effect=lambda path, **kwargs:
+                          {} if str(path)=='unused' else real_torch_load(path, **kwargs)):
+                different_driver_data = copy.deepcopy(data)
+                different_driver_data.batch['x'] = torch.zeros(1)
+                for _ in range(4):
+                    run_four_step_gate(recovery_worker,different_driver_data,scorer=lambda *_:None)
+                recovered_report=json.loads((recovery/'parity.json').read_text())
+                validate_horizon_export(recovery,recovered_report,4)
+                for k,p in parameters(worker).items():
+                    self.assertTrue(torch.equal(p,parameters(recovery_worker)[k]))
+                for i in range(1,5):
+                    self.assertTrue(json.loads((recovery/f'step-{i}'/'recovery.json').read_text())['input_and_state_match'])
+            from transfer_alignment.production_horizon import verify_recovered_step
+            original_step=json.loads((root/'step-1/parity.json').read_text())
+            changed=copy.deepcopy(original_step)
+            changed['input_digest']='different'
+            with self.assertRaisesRegex(ValueError,'optimizer input differs'):
+                verify_recovered_step(original_step,changed)
+            changed=copy.deepcopy(original_step)
+            changed['observed_digests']['optimizer']='different'
+            with self.assertRaisesRegex(ValueError,'observed_digests/optimizer'):
+                verify_recovered_step(original_step,changed)
             wrong = copy.deepcopy(report)
             wrong['parent_digests']['optimizer'] = 'wrong-initial-adam'
             with self.assertRaisesRegex(ValueError, 'initial parent'):

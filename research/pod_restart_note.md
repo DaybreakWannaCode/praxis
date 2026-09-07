@@ -7,3 +7,13 @@ All four fixed rollout inputs, state digests, optimizer records and logs are bac
 Keep the existing network volume. It contains the warm model/Adam checkpoint, base weights, original source, H1 exports and frozen configs. The active Python environment is under `/opt/praxis-original`, outside that volume; after a container replacement it may need rebuilding. Do not assume the old SSH endpoint remains valid after restarting.
 
 On resume: verify the volume mount and files, runtime versions, reward contract and saved parent hashes. Repair exact displacement encoding and preserve the failed attempt. Recover by replaying saved inputs with state matching against the archived step reports; do not silently substitute fresh updates or relax the reconstruction check. Only then finish the remaining frozen candidates and visual evaluation. No automatic main sweep.
+
+Local recovery implementation now accepts `--recovery-gate` in the bounded
+candidate launcher. It consumes archived optimizer inputs, verifies all four
+archived reports first, compares each current parent before updating, then
+compares input and parent/control/observed model, buffer, Adam and scheduler
+digests with the archived trajectory. Internal control/observer parity still
+includes worker RNG. Cross-process driver RNG replay is explicitly not claimed.
+Twenty local tests passed, including four real CPU AdamW recovery updates
+with deliberately different discarded driver tensors. Full GPU recovery and
+its launcher paths remain to be configured and verified after pod availability.

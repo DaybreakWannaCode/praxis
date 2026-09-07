@@ -49,6 +49,16 @@ def validate_four_steps(roots):
     return reports
 
 
+def verify_recovered_step(original, recovered):
+    """Match saved rollout and model/optimizer trajectory, not fresh driver RNG."""
+    if original['input_digest'] != recovered['input_digest']:
+        raise ValueError('Recovery optimizer input differs from archived input')
+    for boundary in ('parent_digests', 'control_digests', 'observed_digests'):
+        for field in CHAIN_FIELDS:
+            if original[boundary][field] != recovered[boundary][field]:
+                raise ValueError(f'Recovery differs: {boundary}/{field}')
+
+
 def prompt_inventory(data):
     """Order-independent text/gold inventory including rollout multiplicities."""
     import hashlib
@@ -79,6 +89,18 @@ def run_four_step_gate(worker, data, *, scorer=None):
 
     if os.environ.get('PRAXIS_FIXED_INPUT') or os.environ.get('PRAXIS_RESUME_DELTA_DIR'):
         raise ValueError('H=4 requires fresh driver inputs; H=1 recovery is forbidden')
+    recovery_root = os.environ.get('PRAXIS_H4_RECOVERY_DIR')
+    prior_state = getattr(worker, '_alignment_horizon', None)
+    if recovery_root:
+        recovery_root = Path(recovery_root)
+        # These are trusted project-generated torch files, never arbitrary uploads.
+        # Validate the whole archived four-step chain before consuming any input.
+        archived = validate_four_steps([recovery_root/f'step-{i}' for i in range(1,5)])
+        next_index = prior_state['count'] if prior_state else 0
+        if next_index >= 4:
+            raise RuntimeError('Recovery already contains four updates')
+        data = torch.load(recovery_root/f'step-{next_index+1}'/'fixed-update-input.pt',
+                          map_location='cpu', weights_only=False)
     inventory = prompt_inventory(data)
     expected_inventory = os.environ.get('PRAXIS_H4_PROMPT_INVENTORY')
     if not expected_inventory or inventory != expected_inventory:
@@ -98,11 +120,13 @@ def run_four_step_gate(worker, data, *, scorer=None):
         del checkpoint
         initial = {k: p.detach().cpu().clone() for k,p in parameters(worker).items()}
         state.update(mapping=mapping, validation=validation, initial=initial, failed=False,
-                     prompt_inventory=inventory)
+                     prompt_inventory=inventory, recovery_root=str(recovery_root) if recovery_root else None)
         write_json(root/'coordinates.json', mapping)
         write_json(root/'horizon.json', dict(status='running', horizon=4, completed_steps=0))
     if state['failed'] or state['count'] >= 4:
         raise RuntimeError('Horizon failed or already contains four updates')
+    if state['recovery_root'] != (str(recovery_root) if recovery_root else None):
+        raise ValueError('Recovery source changed during the horizon')
     root = state['root']
     step_root = root / f"step-{state['count']+1}"
     saved_env = {k: os.environ.get(k) for k in ('PRAXIS_PARITY_DIR','PRAXIS_PARENT_MODEL')}
@@ -114,9 +138,21 @@ def run_four_step_gate(worker, data, *, scorer=None):
         os.environ['PRAXIS_PARITY_DIR'] = str(step_root)
         os.environ.pop('PRAXIS_PARENT_MODEL', None)
         worker._parity_gate_done = False
+        if recovery_root:
+            from .production_parity import state_digests
+            current = state_digests(worker)
+            for field in CHAIN_FIELDS:
+                if current[field] != archived[state['count']]['parent_digests'][field]:
+                    raise ValueError(f'Recovery parent differs: {field}')
         result = run_fixed_rollout_gate(worker, data, scorer=scorer)
         previous = state.get('previous')
         report = validate_step(step_root, previous)
+        if recovery_root:
+            verify_recovered_step(archived[state['count']], report)
+            write_json(step_root/'recovery.json', dict(
+                source=str(recovery_root/f"step-{state['count']+1}"),
+                input_and_state_match=True,
+                scope='saved optimizer input and parameter/buffer/Adam/scheduler trajectory; not driver RNG replay'))
         if state['count'] == 0:
             state['first'] = report
         state['previous'] = report
@@ -139,6 +175,9 @@ def run_four_step_gate(worker, data, *, scorer=None):
                             step_input_digests=[r['input_digest'] for r in reports],
                             elapsed_seconds=time.monotonic()-state['start'],
                             scope='four consecutive one-rank parity-gated worker updates')
+            if recovery_root:
+                combined['recovery_source'] = str(recovery_root)
+                combined['recovery_scope'] = 'Exact archived optimizer inputs and state trajectory; fresh driver rollouts discarded'
             write_json(root/'parity.json', combined)
             write_json(root/'horizon.json', dict(status='passed', horizon=4, completed_steps=4))
             del state['initial']
