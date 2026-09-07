@@ -6,8 +6,8 @@
          assert self._is_actor
 +        import os
 +        if os.getenv("PRAXIS_PARITY_DIR") and not getattr(self, "_parity_gate_active", False):
-+            from transfer_alignment.production_parity import run_fixed_rollout_gate
-+            return run_fixed_rollout_gate(self, data)
++            from transfer_alignment.production_parity import dispatch_parity_gate
++            return dispatch_parity_gate(self, data)
          data = data.to(torch.cuda.current_device())
  
          if self._use_param_offload:
@@ -27,7 +27,7 @@
          # this is for local ray cluster
 -        ray.init(runtime_env={"env_vars": {"TOKENIZERS_PARALLELISM": "true", "NCCL_DEBUG": "WARN"}})
 +        env_vars = {"TOKENIZERS_PARALLELISM": "true", "NCCL_DEBUG": "WARN"}
-+        for key in ("PRAXIS_PARITY_DIR", "PRAXIS_PARENT_MODEL", "PRAXIS_FIXED_INPUT", "PRAXIS_RESUME_DELTA_DIR", "PRAXIS_REWARD_CONTRACT", "PYTHONPATH", "FLASH_ATTENTION_DETERMINISTIC"):
++        for key in ("PRAXIS_PARITY_DIR", "PRAXIS_ALIGNMENT_HORIZON", "PRAXIS_PARENT_MODEL", "PRAXIS_FIXED_INPUT", "PRAXIS_RESUME_DELTA_DIR", "PRAXIS_REWARD_CONTRACT", "PYTHONPATH", "FLASH_ATTENTION_DETERMINISTIC"):
 +            if key in os.environ:
 +                env_vars[key] = os.environ[key]
 +        ray.init(runtime_env={"env_vars": env_vars})

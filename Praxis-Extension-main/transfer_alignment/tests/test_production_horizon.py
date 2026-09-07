@@ -55,6 +55,26 @@ class HorizonTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'positive learning'):
                 validate_four_steps(roots)
 
+class HorizonDispatchTests(unittest.TestCase):
+    def test_default_explicit_four_and_invalid_dispatch(self):
+        import os
+        from unittest.mock import patch
+        from transfer_alignment.production_parity import dispatch_parity_gate
+        with patch.dict(os.environ, {}, clear=True), \
+                patch('transfer_alignment.production_parity.run_fixed_rollout_gate', return_value=1) as one, \
+                patch('transfer_alignment.production_horizon.run_four_step_gate', return_value=4) as four:
+            self.assertEqual(dispatch_parity_gate(None, None), 1)
+            one.assert_called_once()
+            os.environ['PRAXIS_ALIGNMENT_HORIZON'] = '4'
+            self.assertEqual(dispatch_parity_gate(None, None), 4)
+            four.assert_called_once()
+            os.environ['PRAXIS_ALIGNMENT_HORIZON'] = '5'
+            with self.assertRaisesRegex(ValueError, 'Only H=1 and H=4'):
+                dispatch_parity_gate(None, None)
+            self.assertEqual(one.call_count, 1)
+            self.assertEqual(four.call_count, 1)
+
+
 class HorizonWorkerTests(unittest.TestCase):
     def test_four_real_adam_updates_export_total_and_reject_fifth(self):
         import copy
