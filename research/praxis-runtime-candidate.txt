@@ -1,0 +1,28 @@
+# Candidate for the supplied original Praxis source; not a validated lock.
+# Install in a separate Python 3.11 environment. FlashAttention is installed
+# separately after torch, because its build inspects the installed torch ABI.
+torch==2.5.1
+torchvision==0.20.1
+torchaudio==2.5.1
+vllm==0.7.3
+transformers==4.49.0
+numpy==1.26.4
+accelerate==1.4.0
+datasets==3.3.2
+peft==0.14.0
+ray[default]==2.40.0
+tensordict==0.6.2
+torchdata==0.11.0
+qwen-vl-utils==0.0.10
+codetiming
+mathruler
+omegaconf
+pandas
+pillow
+pyarrow>=15.0.0
+pylatexenc
+wandb
+packaging
+ninja
+setuptools
+wheel

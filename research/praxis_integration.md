@@ -94,11 +94,32 @@ xformers 0.0.28.post3. Transformers 4.49.0 is a candidate matching the original
 minimum: its [tagged Qwen source](https://github.com/huggingface/transformers/blob/v4.49.0/src/transformers/models/qwen2_5_vl/modeling_qwen2_5_vl.py)
 contains the older attention implementation referenced by Praxis.
 
-These are compatibility starting points, not an installed or resolved environment.
+`praxis-runtime-candidate.txt` pins a candidate stack. The first resolver attempt
+showed that vLLM 0.7.3 specifically requires Ray 2.40.0 through its `adag` extra;
+the candidate now uses that version. These are compatibility starting points,
+not a validated end-to-end environment.
 Flash-attention ABI, Ray, torchdata, tensordict and the original vLLM private
 interfaces still require validation. Build a separate Python 3.11 environment and
 record the resolved lock and import checks before attempting the bounded baseline;
 do not downgrade the working PyTorch 2.8 calibration environment in place.
+
+`scripts/check_praxis_runtime.py` checks original trainer imports, the original
+Qwen attention monkey patch, optional bounded config/data loading, and an optional
+small FlashAttention GPU forward/backward pass. It writes failures as well as
+successes to JSON. Passing these checks does not establish vLLM/FSDP execution.
+
+`praxis-baseline-bounded.yaml` is a one-step engineering configuration: four text
+prompts, five completions per prompt, unchanged original MCQ reward, full-parameter
+AdamW, one GPU and a 512-token response cap. It disables compilation/CUDA graphs
+for debugging and retains one checkpoint. These explicit departures from the
+paper's scale make it a runtime baseline, not a reproduction of reported scores.
+`scripts/prepare_praxis_baseline.py` prepares eight fixed distinct text prompts
+with source-row and file hashes, split four/four for train/validation. This text
+validation checks the pipeline; it is not the independent visual endpoint.
+
+The original trainer always saves a final checkpoint, even with `save_freq=-1`.
+Budget for model weights and full Adam state before launch. Do not interpret the
+network filesystem's shared backing capacity as the purchased volume quota.
 
 ### Execution gates
 
