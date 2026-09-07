@@ -85,7 +85,7 @@ iterator. End-to-end rollout replay remains a required production check.
 
 ## Remaining gates before claiming production integration
 
-### Candidate environment, not a tested lock
+### Runtime preflight and its limits
 
 The original source's minimum vLLM version is 0.7.3. Its published
 [package metadata](https://pypi.org/pypi/vllm/0.7.3/json) requires PyTorch 2.5.1,
@@ -98,10 +98,23 @@ contains the older attention implementation referenced by Praxis.
 showed that vLLM 0.7.3 specifically requires Ray 2.40.0 through its `adag` extra;
 the candidate now uses that version. These are compatibility starting points,
 not a validated end-to-end environment.
-Flash-attention ABI, Ray, torchdata, tensordict and the original vLLM private
-interfaces still require validation. Build a separate Python 3.11 environment and
-record the resolved lock and import checks before attempting the bounded baseline;
-do not downgrade the working PyTorch 2.8 calibration environment in place.
+The isolated Python 3.11 runtime passed original trainer imports, the Qwen
+attention patch, bounded config/data loading and a BF16 FlashAttention GPU
+forward/backward check on the H100. It uses PyTorch 2.5.1, vLLM 0.7.3,
+Transformers 4.49.0 and FlashAttention 2.7.4.post1. The supplied requirements
+omitted math-verify, latex2sympy2-extended and TensorBoard despite unconditional
+imports. The candidate pins also prevent the math parser from forcing an
+OmegaConf downgrade that removes `to_object`. Detailed locks and failed/passed
+preflight records remain in ignored run archives. The subsequent one-step
+uninstrumented baseline completed original vLLM generation, a finite nonzero
+full-parameter AdamW update, validation and checkpoint saving on one H100 80 GB.
+That establishes this bounded runtime path, not paper-scale training, long-response
+memory capacity or visual transfer. Do not downgrade the calibration environment.
+
+For the current pod, the original runtime lives in the isolated container path
+`/opt/praxis-original`: the persistent volume was very slow when installing
+thousands of package files. Models, data, checkpoints and the resolved environment
+record remain persistent. Rebuild this environment after replacing the container.
 
 `scripts/check_praxis_runtime.py` checks original trainer imports, the original
 Qwen attention monkey patch, optional bounded config/data loading, and an optional
@@ -123,8 +136,10 @@ network filesystem's shared backing capacity as the purchased volume quota.
 
 ### Execution gates
 
-- Pin the original source commit or immutable snapshot, reward, model and data;
-  validate a short uninstrumented text-only baseline with the original trainer.
+- The short uninstrumented text-only baseline passed against the immutable supplied
+  source snapshot, pinned base model and hashed text split. Preserve its reward,
+  source and configuration when testing instrumentation parity; paper-scale
+  baseline reproduction is still outstanding.
 - Repeat identical fixed-rollout optimizer work with instrumentation enabled and
   verify weights/state match. Keep rollout generation separate when isolating
   optimizer correctness.
