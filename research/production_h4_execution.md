@@ -86,3 +86,13 @@ actual failed GPU tensor is unavailable, so this is a tested repair for a
 confirmed encoding limitation, not proof that the failed candidate is recovered.
 Promoted tensors increase storage and host-memory requirements; recheck headroom
 before a GPU replay. No new GPU run was launched during the local repair.
+
+## GPU recovery trajectory verified
+
+All four recovered optimizer inputs and parameter/buffer/Adam/scheduler
+parent/control/observed states matched the preserved original attempt. Each
+step also passed its internal control/observer parity including worker RNG.
+All four recovery and parity reports are archived locally. The selective-FP64
+export started and passed the original failure point; its complete manifest,
+reconstruction validation and process exit are still pending. This is recovered
+trajectory evidence, not yet a completed H4 candidate export.
