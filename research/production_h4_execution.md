@@ -96,3 +96,18 @@ All four recovery and parity reports are archived locally. The selective-FP64
 export started and passed the original failure point; its complete manifest,
 reconstruction validation and process exit are still pending. This is recovered
 trajectory evidence, not yet a completed H4 candidate export.
+
+## First H4 candidate complete and verified
+
+Recovery exited 0 after 2,719.25 seconds (45.32 minutes). All four original
+inputs and model/optimizer trajectories matched. The completed export
+contains 824 tensors / 3,754,622,976 canonical elements, with 256 tensors
+promoted to FP64. Total compressed bytes: 8,411,546,089 (7.834 GiB).
+Independent rereading verified every file checksum and finite value, all
+metadata and chains, and recomputed update norm 0.11603667820768875.
+Completion, parity, displacement manifest and integrity reports are backed up
+locally. The earlier failed 2,194.98-second attempt remains in the cost record.
+
+Candidate 1 (the second frozen candidate) was dispatched next in tmux
+`praxis-h4-001` with its unchanged config/input hashes and two-hour cap.
+Candidates 2–3 and the H4 visual precision measurement have not started.
