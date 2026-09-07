@@ -128,7 +128,8 @@ def run_four_step_gate(worker, data, *, scorer=None):
             if manifest(worker) != state['mapping']:
                 raise ValueError('Canonical coordinates changed over H=4')
             delta = save_displacement(canonical_views(state['initial'], state['mapping']),
-                                      canonical_views(parameters(worker), state['mapping']), root/'delta')
+                                      canonical_views(parameters(worker), state['mapping']), root/'delta',
+                                      allow_float64=True)
             combined = dict(report)
             combined.update(status='passed', horizon=4, completed_steps=4,
                             prompt_inventory=inventory,

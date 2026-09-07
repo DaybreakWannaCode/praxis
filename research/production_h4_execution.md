@@ -70,3 +70,19 @@ Repair must preserve exact child reconstruction, validate finite values, retain
 this failed attempt and its cost, and verify any replay against all four saved
 step reports. Do not relax the exactness gate or count this as a completed
 H4 visual experiment.
+
+## Local encoding repair (not GPU validated)
+
+H4 now permits per-tensor FP64 displacement storage only when FP32 cannot
+reconstruct the FP32 child. Every chunk still checks finite endpoints and exact
+child reconstruction. Old H1 files keep their FP32 format and remain readable.
+The loader, dot product and child application preserve the promoted precision.
+Very large endpoint exponent separations can still fail even in FP64; this
+remains an explicit error rather than a silently approximate child.
+
+Twenty local tests passed, including cancellation, legacy loading, replay-byte
+verification, nonfinite rejection and the four-step CPU AdamW trajectory. The
+actual failed GPU tensor is unavailable, so this is a tested repair for a
+confirmed encoding limitation, not proof that the failed candidate is recovered.
+Promoted tensors increase storage and host-memory requirements; recheck headroom
+before a GPU replay. No new GPU run was launched during the local repair.
