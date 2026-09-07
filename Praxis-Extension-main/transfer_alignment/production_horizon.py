@@ -80,6 +80,9 @@ def run_four_step_gate(worker, data, *, scorer=None):
     if os.environ.get('PRAXIS_FIXED_INPUT') or os.environ.get('PRAXIS_RESUME_DELTA_DIR'):
         raise ValueError('H=4 requires fresh driver inputs; H=1 recovery is forbidden')
     inventory = prompt_inventory(data)
+    expected_inventory = os.environ.get('PRAXIS_H4_PROMPT_INVENTORY')
+    if not expected_inventory or inventory != expected_inventory:
+        raise ValueError('H=4 input does not match the frozen H1 candidate inventory')
     state = getattr(worker, '_alignment_horizon', None)
     if state is None:
         if getattr(worker, '_parity_gate_done', False):

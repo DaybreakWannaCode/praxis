@@ -102,7 +102,7 @@ class HorizonWorkerTests(unittest.TestCase):
         from unittest.mock import patch
         from transfer_alignment.tests.test_production_gate import Worker
         from transfer_alignment.production_parity import parameters
-        from transfer_alignment.production_horizon import run_four_step_gate
+        from transfer_alignment.production_horizon import run_four_step_gate, prompt_inventory
         from transfer_alignment.production_displacement import load_tensor
         worker = Worker()
         worker.update_actor(None)
@@ -114,7 +114,8 @@ class HorizonWorkerTests(unittest.TestCase):
         data = SimpleNamespace(batch={'x':torch.ones(1)}, meta_info={}, non_tensor_batch={'problem':['fixed'], 'ground_truth':['A']})
         with tempfile.TemporaryDirectory() as folder, patch.dict(os.environ, {
                 'PRAXIS_PARITY_DIR':str(Path(folder)/'gate'),
-                'PRAXIS_PARENT_MODEL':'unused', 'PRAXIS_REWARD_CONTRACT':'unused'}), \
+                'PRAXIS_PARENT_MODEL':'unused', 'PRAXIS_REWARD_CONTRACT':'unused',
+                'PRAXIS_H4_PROMPT_INVENTORY':prompt_inventory(data)}), \
                 patch('torch.cuda.synchronize'), \
                 patch('torch.distributed.get_world_size', return_value=1), \
                 patch('transfer_alignment.production_coordinates.manifest', return_value={}), \
