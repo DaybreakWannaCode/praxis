@@ -1,0 +1,4 @@
+# Add to the original-runtime environment for development uncertainty analysis.
+# Validated on Python 3.11 with the existing NumPy 1.26.4; no torch change.
+numpy==1.26.4
+scipy==1.15.3

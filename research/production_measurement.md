@@ -102,7 +102,11 @@ answers does not produce a zero-width confidence interval. Pointwise and
 Bonferroni candidate-pair intervals are reported separately. These intervals do
 not establish generalization beyond this development panel or parent.
 
-This runner and its contract/statistics tests are implemented locally. The larger
+The first 25 contract/statistics/parity tests passed locally and in the original
+production runtime. Its only added runtime dependency is SciPy 1.15.3, pinned in
+`production-precision-requirements.txt`; existing NumPy 1.26.4 and PyTorch are
+unchanged. An additional image-byte integrity guard is tested before deployment.
+The larger
 response budget and additional candidate batches have not yet been frozen or run;
 they will be fixed using integration cost and parser checks before sampling.
 

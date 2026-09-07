@@ -61,6 +61,11 @@ def validate(cfg, source_manifest, gates):
         raise ValueError("Manifest split mismatch")
     if {i.group_id for i in score} & {i.group_id for i in dev}:
         raise ValueError("Scene families overlap")
+    if set(cfg["image_sha256"])!=set(ids):
+        raise ValueError("Frozen image hash inventory differs")
+    for item in score+dev:
+        if hashlib.sha256(Path(item.image_path).read_bytes()).hexdigest()!=cfg["image_sha256"][item.id]:
+            raise ValueError("Frozen image bytes have changed")
     count=len(score)*cfg["probe_repeats"]*cfg["probe_samples"]
     count+=len(dev)*(len(gates)+2)*cfg["outcome_samples"]
     count+=cfg["outcome_samples"]  # exact parent replay on first dev image

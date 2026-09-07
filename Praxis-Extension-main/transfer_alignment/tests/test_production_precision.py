@@ -34,6 +34,12 @@ class PrecisionContractTests(unittest.TestCase):
                   'score_ids':['s'],'dev_ids':['d'],'response_budget':72}
         self.items=[SimpleNamespace(id='s',split='score',group_id='scene-s'),
                     SimpleNamespace(id='d',split='dev',group_id='scene-d')]
+        self.cfg['image_sha256']={}
+        for item in self.items:
+            path=root/(item.id+'.jpg')
+            path.write_bytes(item.id.encode())
+            item.image_path=str(path)
+            self.cfg['image_sha256'][item.id]=hashlib.sha256(path.read_bytes()).hexdigest()
 
     def check(self):
         with patch('transfer_alignment.production_precision.load_manifest',return_value=self.items):
@@ -53,6 +59,10 @@ class PrecisionContractTests(unittest.TestCase):
     def test_scene_overlap_rejected(self):
         self.items[1].group_id='scene-s'
         with self.assertRaisesRegex(ValueError,'families'):self.check()
+
+    def test_changed_image_rejected(self):
+        Path(self.items[0].image_path).write_bytes(b'changed')
+        with self.assertRaisesRegex(ValueError,'bytes'):self.check()
 
     def test_horizon_cannot_be_relabelled(self):
         self.cfg['horizon']=4
