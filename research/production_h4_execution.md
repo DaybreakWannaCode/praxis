@@ -39,7 +39,9 @@ The visual check is capped at ten hours plus the same allowance. These are
 maximum execution bounds, not runtime estimates or authorization for retries.
 The launcher requires tmux and verifies frozen file hashes and final completion.
 
-H=4 has not launched. Confirm network-volume headroom, deploy the launcher, and
-run the first frozen candidate to validate the full GPU path before proceeding
-with the other three. Preserve all completed H=1 artifacts. The user confirmed network-volume expansion on 2026-09-08; the exact new quota
+The first H=4 candidate launched on 2026-09-07 at 19:30:43 UTC in tmux
+`praxis-h4-000`, with the frozen candidate-0 config and a 7,200-second timeout.
+The launcher passed its input checks and Ray initialized. Four-step GPU parity
+and the total export remain unverified; candidates 1–3 and visual evaluation
+have not launched. Preserve all completed H=1 artifacts. The user confirmed network-volume expansion on 2026-09-08; the exact new quota
 has not been independently verified. The pod was idle at the decision review.
