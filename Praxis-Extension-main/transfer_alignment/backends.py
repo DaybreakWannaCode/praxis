@@ -66,7 +66,7 @@ class QwenBackend:
     def __init__(self, cfg):
         import re
         self.answer_parser = cfg.get('answer_parser', 'legacy')
-        if self.answer_parser not in ('legacy', 'explicit_final_v2'):
+        if self.answer_parser not in ('legacy', 'explicit_final_v2', 'explicit_final_v3'):
             raise ValueError('Unknown answer parser profile')
         from peft import LoraConfig, get_peft_model
         from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration
@@ -135,6 +135,8 @@ class QwenBackend:
 
     def sample(self, item, modality, count, seed, *, greedy=False):
         from .answer_parsing import parse_choice, score_completion
+        if self.answer_parser=='explicit_final_v3':
+            from .answer_parsing_v3 import parse_choice, score_completion
         ex = self.extractor
         was_training = self.model.training
         try:

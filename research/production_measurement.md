@@ -12,7 +12,9 @@ correctness, format, tag and length components are checked against the actual
 terminal token reward tensor, saved with token IDs and grouped by original GRPO
 UID. Group diagnostics include covariance: component variances need not add.
 
-Visual scoring and outcomes use `explicit_final_v2` binary extracted correctness.
+The archived integration uses `explicit_final_v2` binary extracted correctness.
+The subsequent precision check will use the separately versioned
+`explicit_final_v3` contract following the production audit below.
 The probe uses sequence-summed log probabilities and RLOO with independent draws;
 no standard-deviation normalization, token averaging, KL, format or length bonus.
 Unconditional correctness is primary. Parse success, conditional correctness and
@@ -72,8 +74,36 @@ padding exclusion and tied-alias validation. Its value check against the retaine
 checkpoint passed for 3,754,622,976 canonical elements, with `lm_head.weight`
 verified as an alias of `model.embed_tokens.weight`. The full visual backend has
 loaded that same layout and completed its first eight-image gradient/projection
-pass. Independent visual outcomes are still running; no transfer claim follows
-from this integration pass alone.
+pass. The complete 112-response integration exited successfully in 2383.8 seconds,
+with 37,901,605,376 peak allocated GPU bytes and exact same-seed parent replay.
+Its two alignment estimates were -0.02694 and -0.01327. On only four independent
+development images with four responses each, parent correctness was 12/16,
+children 12/16 and 10/16, and the independently sampled unchanged parent 11/16.
+These v2 engineering outcomes are too small to establish transfer or stable
+candidate ordering; they are not the bounded precision result.
+
+### Production parser audit and version transition
+
+All 112 fixed integration responses were audited (including 16 exact replay
+duplicates). Two malformed final tags exposed incorrect fallback into option
+discussion in the reasoning. `<answer>B>` followed by discussion of option A
+was extracted as A, and `<Banswer>B</answer>` after enumerated options was also
+extracted as A. The new `answer_parsing_v3.py` reads the leading explicit label in
+an unclosed answer span and accepts a single duplicated opening-tag label only
+when it agrees with the explicit answer. It rejects contradictory tag labels,
+invalid choices and explicit multiple choices. Untagged and closed prose-only
+v2 semantics are otherwise retained; this is not a claim of universal parsing
+correctness. The original v2 source and contract remain unchanged.
+
+On this fixed audit panel exactly two extracted labels change, and one binary
+reward changes (in the independent unchanged-parent control). The probe correction
+changes an incorrect A to an incorrect B, so that response's reward stays zero.
+The archived v2 summary is not rewritten. Use
+`production_reward_contract_v3.json` for both fresh precision gradients and
+outcomes; never combine gradients and outcomes under different parser contracts.
+No final-test examples were used to develop this correction. Ten v2 responses
+were unparsed: seven lacked an explicit final label, two were the same replayed
+prose-only answer, and one supplied an invalid final label. None was truncated.
 
 ### Bounded precision implementation
 

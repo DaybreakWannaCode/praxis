@@ -79,7 +79,9 @@ def validate(cfg, source_manifest, gates):
 def run(cfg, source_manifest, gates, output):
     from verl.utils.reward_score.mcq import mcq_compute_score
     from .production_rewards import verify_contract
-    verify_contract(cfg["reward_contract"],mcq_compute_score)
+    contract=verify_contract(cfg["reward_contract"],mcq_compute_score)
+    if contract["visual"]["profile"]!=cfg["answer_parser"]:
+        raise ValueError("Configured parser differs from the reward contract")
     reports,mapping,score,dev=validate(cfg,source_manifest,gates)
     output.mkdir(parents=True,exist_ok=False)
     start=time.monotonic()

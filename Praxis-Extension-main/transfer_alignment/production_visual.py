@@ -20,7 +20,8 @@ class FullVisualBackend(QwenBackend):
         from task_0.src.gradient import PolicyGradientExtractor
         from task_0.src.load_model import enable_gradient_checkpointing
         if not torch.cuda.is_available():raise RuntimeError("Production visual probe requires CUDA")
-        if cfg["answer_parser"]!="explicit_final_v2":raise ValueError("Visual parser contract differs")
+        if cfg["answer_parser"] not in ("explicit_final_v2","explicit_final_v3"):
+            raise ValueError("Visual parser contract differs")
         self.answer_parser=cfg["answer_parser"]
         self.parent_state=torch.load(parent_model,map_location="cpu",mmap=True,weights_only=False)
         self.model=Qwen2_5_VLForConditionalGeneration.from_pretrained(

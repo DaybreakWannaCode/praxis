@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "text": {
+    "profile": "released_code",
+    "source": "verl/utils/reward_score/mcq.py",
+    "source_sha256": "1d8049bffd7061a9fdfdf4ef42e7a1aca6f5eb70e548e80e7a8aa830223b35af",
+    "coefficients": {
+      "accuracy": 1.0,
+      "format": 0.8,
+      "tag_count": 0.4,
+      "length": 0.5
+    },
+    "tuning": "none"
+  },
+  "visual": {
+    "profile": "explicit_final_v3",
+    "reward": "binary fixed-parser correctness; unparsed=0",
+    "gradient": "RLOO; sequence-summed log probabilities; no std normalization, KL or auxiliary bonuses",
+    "evaluation": "same parser and binary reward as gradient",
+    "source_hashes": {
+      "transfer_alignment/answer_parsing.py": "0d03cf0ffeceeedc3186098c6c41ca7a5a37b0c203653b24a3de8476414900ba",
+      "task_0/src/rewards.py": "4cf3a8980fff4ca6e43a5468d3395a24afd15ba9f8bd2c27b8601b435497be75",
+      "transfer_alignment/answer_parsing_v3.py": "272e6878bd3c68f017e0b7112fbaf5ee854d31cd5c68f2219d2e764720d013dd"
+    },
+    "diagnostics": [
+      "unconditional_correctness",
+      "parse_success",
+      "correctness_conditional_on_parsing",
+      "truncation"
+    ],
+    "scope": "Production development audit v3; preserves archived v2 implementation; freeze before precision sampling"
+  },
+  "auxiliary_likelihood": "disabled; requires explicit separate objective label if enabled"
+}
