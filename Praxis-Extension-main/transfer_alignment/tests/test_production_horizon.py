@@ -55,5 +55,51 @@ class HorizonTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'positive learning'):
                 validate_four_steps(roots)
 
+class HorizonWorkerTests(unittest.TestCase):
+    def test_four_real_adam_updates_export_total_and_reject_fifth(self):
+        import copy
+        import os
+        import torch
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        from transfer_alignment.tests.test_production_gate import Worker
+        from transfer_alignment.production_parity import parameters
+        from transfer_alignment.production_horizon import run_four_step_gate
+        from transfer_alignment.production_displacement import load_tensor
+        worker = Worker()
+        worker.update_actor(None)
+        initial = {k:p.detach().clone() for k,p in parameters(worker).items()}
+        reference = Worker()
+        reference.fsdp_module.load_state_dict(copy.deepcopy(worker.fsdp_module.state_dict()))
+        reference.optimizer.load_state_dict(copy.deepcopy(worker.optimizer.state_dict()))
+        reference.lr_scheduler.load_state_dict(copy.deepcopy(worker.lr_scheduler.state_dict()))
+        data = SimpleNamespace(batch={'x':torch.ones(1)}, meta_info={}, non_tensor_batch={})
+        with tempfile.TemporaryDirectory() as folder, patch.dict(os.environ, {
+                'PRAXIS_PARITY_DIR':str(Path(folder)/'gate'),
+                'PRAXIS_PARENT_MODEL':'unused', 'PRAXIS_REWARD_CONTRACT':'unused'}), \
+                patch('torch.cuda.synchronize'), \
+                patch('torch.distributed.get_world_size', return_value=1), \
+                patch('transfer_alignment.production_coordinates.manifest', return_value={}), \
+                patch('transfer_alignment.production_coordinates.verify_values', return_value={'passed':True}), \
+                patch('transfer_alignment.production_coordinates.canonical_views', side_effect=lambda p,m:p), \
+                patch('transfer_alignment.production_parity.audit_text_batch'), \
+                patch('torch.load', return_value={}):
+            for i in range(4):
+                run_four_step_gate(worker, data, scorer=lambda *_:None)
+                reference.update_actor(data)
+                for k,p in parameters(worker).items():
+                    self.assertTrue(torch.equal(p, parameters(reference)[k]))
+                self.assertEqual(os.environ['PRAXIS_PARENT_MODEL'], 'unused')
+                if i<3:
+                    self.assertFalse((Path(folder)/'gate/delta').exists())
+            root = Path(folder)/'gate'
+            exported = json.loads((root/'delta/manifest.json').read_text())
+            for row in exported['parameters']:
+                self.assertTrue(torch.equal(initial[row['name']]+load_tensor(root/'delta',row),
+                                            parameters(worker)[row['name']]))
+            self.assertEqual(json.loads((root/'parity.json').read_text())['completed_steps'],4)
+            with self.assertRaisesRegex(RuntimeError, 'four updates'):
+                run_four_step_gate(worker,data,scorer=lambda *_:None)
+
 if __name__ == '__main__':
     unittest.main()
