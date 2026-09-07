@@ -86,6 +86,10 @@ def run_fixed_rollout_gate(worker, data, *, scorer=None):
     try:
         if any(float(g["lr"]) <= 0 for g in worker.optimizer.param_groups):
             raise ValueError("Parity requires a warm parent with nonzero next LR")
+        fixed_input=os.environ.get("PRAXIS_FIXED_INPUT")
+        if fixed_input:
+            data=torch.load(fixed_input,map_location="cpu",weights_only=False)
+            report["fixed_input_recovery_source"]=fixed_input
         audit_text_batch(data, worker.tokenizer, scorer, root,
                          os.environ["PRAXIS_REWARD_CONTRACT"])
         checkpoint_model=os.environ.get("PRAXIS_PARENT_MODEL")
@@ -126,12 +130,16 @@ def run_fixed_rollout_gate(worker, data, *, scorer=None):
         report["equal"] = {k: control_hashes[k] == observed_hashes[k] for k in control_hashes}
         if not all(report["equal"].values()):
             raise AssertionError("Observer/control post-state parity failed")
+        report["status"]="parity_passed_export_pending" if checkpoint_model else "passed"
+        write_json(root / "parity.json",report)
         if checkpoint_model:
             from .production_coordinates import canonical_views
             from .production_displacement import save_displacement
             progress("save_canonical_displacement")
+            resume_from=os.environ.get("PRAXIS_RESUME_DELTA_DIR")
+            if resume_from and not fixed_input:raise ValueError("Export recovery requires saved fixed input")
             displacement=save_displacement(canonical_views(parent["parameters"],mapping),
-                                          canonical_views(parameters(worker),mapping),root/"delta")
+                                          canonical_views(parameters(worker),mapping),root/"delta",resume_from=resume_from)
             report["canonical_displacement"]={k:v for k,v in displacement.items() if k!="parameters"}
         report["status"] = "passed"
         worker._parity_gate_done = True

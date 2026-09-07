@@ -45,6 +45,24 @@ class Worker:
 
 
 class ProductionGateTests(unittest.TestCase):
+    def test_export_recovery_verifies_replay_and_repairs_only_new_copy(self):
+        before={"a":torch.ones(4),"b":torch.ones(4)}
+        after={n:v+1e-5 for n,v in before.items()}
+        with tempfile.TemporaryDirectory() as folder:
+            old=Path(folder)/"old"
+            save_displacement(before,after,old)
+            damaged=old/"00001.f32.gz"
+            damaged.write_bytes(damaged.read_bytes()[:-8])
+            new=Path(folder)/"new"
+            report=save_displacement(before,after,new,resume_from=old)
+            self.assertTrue((new/"00000.f32.gz").is_symlink())
+            self.assertFalse((new/"00001.f32.gz").is_symlink())
+            for row in report["parameters"]:
+                self.assertTrue(torch.equal(before[row["name"]]+load_tensor(new,row),after[row["name"]]))
+            different={n:v+1e-4 for n,v in before.items()}
+            with self.assertRaisesRegex(ValueError,"exact replay"):
+                save_displacement(before,different,Path(folder)/"wrong",resume_from=old)
+
     def test_visual_child_load_always_starts_from_parent(self):
         backend=FullVisualBackend.__new__(FullVisualBackend)
         backend.model=torch.nn.Linear(2,1)
