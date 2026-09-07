@@ -132,3 +132,30 @@ def run_four_step_gate(worker, data, *, scorer=None):
                 os.environ.pop(key, None)
             else:
                 os.environ[key] = value
+
+
+def validate_horizon_export(root, report, horizon):
+    """Reject relabelled or incomplete trajectories before visual sampling."""
+    root = Path(root)
+    if report.get('horizon', 1) != horizon:
+        raise ValueError('Export horizon differs from requested horizon')
+    if horizon == 1:
+        return
+    if horizon != 4 or report.get('completed_steps') != 4:
+        raise ValueError('H=4 export requires four completed steps')
+    progress = json.loads((root/'horizon.json').read_text())
+    if progress != dict(status='passed', horizon=4, completed_steps=4):
+        raise ValueError('H=4 export is incomplete')
+    steps = validate_four_steps([root/f'step-{i}' for i in range(1,5)])
+    if report['parent_digests'] != steps[0]['parent_digests']:
+        raise ValueError('H=4 initial parent differs from first step')
+    for field in ('control_digests', 'observed_digests'):
+        if report[field] != steps[-1][field]:
+            raise ValueError('H=4 final state differs from fourth step')
+    if report.get('step_input_digests') != [s['input_digest'] for s in steps]:
+        raise ValueError('H=4 input inventory differs')
+    delta = json.loads((root/'delta/manifest.json').read_text())
+    if not delta.get('child_reconstruction_exact'):
+        raise ValueError('H=4 total displacement cannot reconstruct child')
+    if report['canonical_displacement'] != {k:v for k,v in delta.items() if k!='parameters'}:
+        raise ValueError('H=4 displacement metadata differs')

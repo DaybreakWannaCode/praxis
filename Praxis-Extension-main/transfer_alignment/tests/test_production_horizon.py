@@ -56,6 +56,15 @@ class HorizonTests(unittest.TestCase):
                 validate_four_steps(roots)
 
 class HorizonDispatchTests(unittest.TestCase):
+    def test_h4_unresolved_is_terminal_budget_result(self):
+        from transfer_alignment.production_statistics import precision_decision
+        scores = [dict(first=0,second=1,approximate_t_interval=[-.1,.1])]
+        outcomes = [dict(first=0,second=1,pointwise=dict(fixed_panel_interval=[-.1,.1]))]
+        result = precision_decision(scores,outcomes,horizon=4,minimum_pairs=1)
+        self.assertEqual(result['h4_decision'], 'bounded_budget_insufficient')
+        self.assertNotIn('h1_decision', result)
+        self.assertFalse(result['main_sweep_authorized'])
+
     def test_default_explicit_four_and_invalid_dispatch(self):
         import os
         from unittest.mock import patch
@@ -118,6 +127,15 @@ class HorizonWorkerTests(unittest.TestCase):
                 self.assertTrue(torch.equal(initial[row['name']]+load_tensor(root/'delta',row),
                                             parameters(worker)[row['name']]))
             self.assertEqual(json.loads((root/'parity.json').read_text())['completed_steps'],4)
+            from transfer_alignment.production_horizon import validate_horizon_export
+            report = json.loads((root/'parity.json').read_text())
+            validate_horizon_export(root, report, 4)
+            wrong = copy.deepcopy(report)
+            wrong['parent_digests']['optimizer'] = 'wrong-initial-adam'
+            with self.assertRaisesRegex(ValueError, 'initial parent'):
+                validate_horizon_export(root, wrong, 4)
+            with self.assertRaisesRegex(ValueError, 'Export horizon'):
+                validate_horizon_export(root, report, 1)
             with self.assertRaisesRegex(RuntimeError, 'four updates'):
                 run_four_step_gate(worker,data,scorer=lambda *_:None)
 

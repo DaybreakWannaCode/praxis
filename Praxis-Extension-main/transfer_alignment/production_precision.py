@@ -44,9 +44,9 @@ def validate(cfg, source_manifest, gates):
         for field in ("parameters", "buffers", "optimizer", "scheduler"):
             if r["parent_digests"][field]!=reports[0]["parent_digests"][field]:
                 raise ValueError("Candidates must share the same complete parent")
-    # Current gate exports one optimizer step only. Do not relabel it as H=4.
-    if cfg["horizon"]!=1:
-        raise ValueError("H=4 total-displacement gate is not implemented")
+    from .production_horizon import validate_horizon_export
+    for gate, report in zip(gates, reports):
+        validate_horizon_export(gate, report, cfg["horizon"])
     mappings=[json.loads((p/"coordinates.json").read_text()) for p in gates]
     if any(m!=mappings[0] for m in mappings):
         raise ValueError("Canonical layouts differ")
@@ -179,7 +179,7 @@ def run(cfg, source_manifest, gates, output):
              "parent_replay_exact":True,"scope":"Fixed-parent development precision; no population transfer claim"}
     summary["precision_decision"]=precision_decision(sealed["pairwise"],pairwise,
         resolution=cfg["decision_rule"]["resolution"],
-        minimum_pairs=cfg["decision_rule"]["minimum_jointly_resolved_pairs"])
+        minimum_pairs=cfg["decision_rule"]["minimum_jointly_resolved_pairs"], horizon=cfg["horizon"])
     write_json(output/"summary.json",summary)
     record=json.loads((output/"manifest.json").read_text())
     record["status"]="complete"
