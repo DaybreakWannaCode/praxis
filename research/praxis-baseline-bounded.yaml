@@ -1,4 +1,5 @@
 # Engineering baseline with the original unmodified trainer, not paper-scale reproduction.
+# Its scheduler initializes LR=0 even when warmup=0; two steps are necessary.
 # Paths are explicit for the existing pod. Data must be prepared and checked first.
 data:
   train_files: /workspace/praxis/data/original-baseline/train.parquet
@@ -71,8 +72,8 @@ worker:
     reward_type: function
     compute_score: mcq
 trainer:
-  max_steps: 1
-  total_episodes: 1
+  max_steps: 2
+  total_episodes: 2
   logger: [console]
   project_name: praxis-original-bounded
   experiment_name: uninstrumented-001
@@ -81,6 +82,6 @@ trainer:
   val_before_train: true
   val_freq: 1
   val_generations_to_log: 0
-  save_freq: 1
+  save_freq: 2
   save_limit: 1
   save_checkpoint_path: /workspace/praxis/runs/original-baseline-001/checkpoints

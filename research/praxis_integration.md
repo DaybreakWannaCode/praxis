@@ -106,10 +106,14 @@ omitted math-verify, latex2sympy2-extended and TensorBoard despite unconditional
 imports. The candidate pins also prevent the math parser from forcing an
 OmegaConf downgrade that removes `to_object`. Detailed locks and failed/passed
 preflight records remain in ignored run archives. The subsequent one-step
-uninstrumented baseline completed original vLLM generation, a finite nonzero
-full-parameter AdamW update, validation and checkpoint saving on one H100 80 GB.
-That establishes this bounded runtime path, not paper-scale training, long-response
-memory capacity or visual transfer. Do not downgrade the calibration environment.
+uninstrumented baseline completed original vLLM generation, finite nonzero
+gradients, validation and checkpoint saving on one H100 80 GB. A full saved-weight
+comparison then found **zero parameter displacement**: the original constant
+scheduler initializes LR to zero even when warmup is zero. Its reported LR is
+logged after advancing the scheduler. The first step initializes Adam moments but
+does not move weights. A second step and another displacement check are required;
+successful execution and nonzero gradients alone do not validate an update.
+Do not downgrade the calibration environment.
 
 For the current pod, the original runtime lives in the isolated container path
 `/opt/praxis-original`: the persistent volume was very slow when installing
@@ -121,7 +125,7 @@ Qwen attention monkey patch, optional bounded config/data loading, and an option
 small FlashAttention GPU forward/backward pass. It writes failures as well as
 successes to JSON. Passing these checks does not establish vLLM/FSDP execution.
 
-`praxis-baseline-bounded.yaml` is a one-step engineering configuration: four text
+`praxis-baseline-bounded.yaml` is a two-step engineering configuration: four text
 prompts, five completions per prompt, unchanged original MCQ reward, full-parameter
 AdamW, one GPU and a 512-token response cap. It disables compilation/CUDA graphs
 for debugging and retains one checkpoint. These explicit departures from the
@@ -136,10 +140,10 @@ network filesystem's shared backing capacity as the purchased volume quota.
 
 ### Execution gates
 
-- The short uninstrumented text-only baseline passed against the immutable supplied
-  source snapshot, pinned base model and hashed text split. Preserve its reward,
-  source and configuration when testing instrumentation parity; paper-scale
-  baseline reproduction is still outstanding.
+- The initial uninstrumented text-only run completed against the immutable supplied
+  source snapshot, pinned base model and hashed text split, but its first step had
+  zero LR and zero displacement. Verify an actual nonzero second step before
+  instrumentation parity; paper-scale baseline reproduction remains outstanding.
 - Repeat identical fixed-rollout optimizer work with instrumentation enabled and
   verify weights/state match. Keep rollout generation separate when isolating
   optimizer correctness.

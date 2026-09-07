@@ -95,6 +95,7 @@ class PraxisStepRecorder:
         if self.calls:
             raise RuntimeError("Expected one optimizer call per Praxis boundary")
         self.calls+=1
+        self.learning_rates_at_step=[float(group["lr"]) for group in optimizer.param_groups]
         self.before=self._snapshot()
 
     def _after_step(self, optimizer, args, kwargs):
@@ -104,7 +105,9 @@ class PraxisStepRecorder:
             raise FloatingPointError("Nonfinite realized Praxis displacement")
         record={"attempt":self.attempt,"status":"applied","scope":self.scope,
                 "before_digest":digest(self.before),"after_digest":digest(after),
-                "update_norm":dot(delta,delta)**0.5}
+                "update_norm":dot(delta,delta)**0.5,
+                "learning_rates_at_step":self.learning_rates_at_step}
+        record["zero_displacement"]=record["update_norm"]==0.0
         if self.gradient is not None:
             record.update(alignment(self.gradient,delta))
         torch.save(delta,self.output/f"delta-{self.attempt:06d}.pt")

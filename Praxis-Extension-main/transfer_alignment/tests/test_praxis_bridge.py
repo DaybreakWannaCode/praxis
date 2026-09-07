@@ -18,6 +18,33 @@ SOURCE=ROOT/"verl/workers/actor/dp_actor.py"
 
 @unittest.skipUnless(SOURCE.exists(),"Set PRAXIS_ROOT to the original source checkout")
 class PraxisBoundaryTests(unittest.TestCase):
+    def test_original_zero_warmup_first_step_is_zero_displacement(self):
+        source=ROOT/"verl/utils/torch_functional.py"
+        tree=ast.parse(source.read_text())
+        fn=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=="get_constant_schedule_with_warmup")
+        env={"torch":torch,"LambdaLR":torch.optim.lr_scheduler.LambdaLR}
+        exec(compile(ast.fix_missing_locations(ast.Module(body=[fn],type_ignores=[])),str(source),"exec"),env)
+        actor=self.actor()
+        scheduler=env["get_constant_schedule_with_warmup"](actor.actor_optimizer,0)
+        before=[p.detach().clone() for p in actor.actor_module.parameters()]
+        with tempfile.TemporaryDirectory() as temp:
+            with PraxisStepRecorder(actor,temp):
+                for p in actor.actor_module.parameters():p.grad=torch.ones_like(p)
+                actor._optimizer_step()
+                scheduler.step()
+                for p,b in zip(actor.actor_module.parameters(),before):self.assertTrue(torch.equal(p,b))
+                self.assertGreater(scheduler.get_last_lr()[0],0)
+                self.assertTrue(all(float(s["step"])==1 for s in actor.actor_optimizer.state.values()))
+                for p in actor.actor_module.parameters():p.grad=torch.ones_like(p)
+                actor._optimizer_step()
+            records=[json.loads(s) for s in (Path(temp)/"rank-00000/steps.jsonl").read_text().splitlines()]
+            self.assertEqual(records[0]["learning_rates_at_step"],[0.0])
+            self.assertTrue(records[0]["zero_displacement"])
+            self.assertEqual(records[0]["update_norm"],0.0)
+            self.assertGreater(records[1]["learning_rates_at_step"][0],0)
+            self.assertFalse(records[1]["zero_displacement"])
+            self.assertGreater(records[1]["update_norm"],0)
+
     def actor(self):
         # Execute the exact source method, avoiding Ray/vLLM imports. This checks
         # its optimizer boundary, not its distributed forward or rollout pipeline.
