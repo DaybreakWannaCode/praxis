@@ -15,6 +15,7 @@ from transfer_alignment.production_rewards import audit_text_batch
 from transfer_alignment.core import digest
 from transfer_alignment.praxis_bridge import PraxisStepRecorder
 from transfer_alignment.production_coordinates import flat_segments, canonical_views, verify_values
+from transfer_alignment.production_displacement import save_displacement, load_tensor
 
 
 class Worker:
@@ -43,6 +44,18 @@ class Worker:
 
 
 class ProductionGateTests(unittest.TestCase):
+    def test_lossless_displacement_roundtrip_and_corruption(self):
+        before={"a":torch.tensor([1.,-2.,0.]),"b":torch.zeros(2,3)}
+        after={"a":before["a"]+torch.tensor([1e-6,-1e-6,1e-8]),"b":before["b"].clone()}
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder)/"delta"
+            report=save_displacement(before,after,root)
+            for row in report["parameters"]:
+                self.assertTrue(torch.equal(before[row["name"]]+load_tensor(root,row),after[row["name"]]))
+            row=dict(report["parameters"][0],raw_sha256="bad")
+            with self.assertRaisesRegex(ValueError,"checksum"):
+                load_tensor(root,row)
+
     def test_streamed_observer_matches_full_delta_record(self):
         worker=Worker()
         worker.update_actor(None)

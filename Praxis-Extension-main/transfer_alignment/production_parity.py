@@ -88,6 +88,15 @@ def run_fixed_rollout_gate(worker, data, *, scorer=None):
             raise ValueError("Parity requires a warm parent with nonzero next LR")
         audit_text_batch(data, worker.tokenizer, scorer, root,
                          os.environ["PRAXIS_REWARD_CONTRACT"])
+        checkpoint_model=os.environ.get("PRAXIS_PARENT_MODEL")
+        if checkpoint_model:
+            from .production_coordinates import manifest, verify_values
+            progress("validate_canonical_coordinates")
+            mapping=manifest(worker)
+            full_state=torch.load(checkpoint_model,map_location="cpu",mmap=True,weights_only=False)
+            report["canonical_validation"]=verify_values(parameters(worker),mapping,full_state)
+            write_json(root / "coordinates.json",mapping)
+            del full_state
         # Small compared with model state; preserve the exact original optimizer input.
         torch.save(data, root / "fixed-update-input.pt")
         report["input_digest"] = digest({"tensors": dict(data.batch.items()),
@@ -117,6 +126,13 @@ def run_fixed_rollout_gate(worker, data, *, scorer=None):
         report["equal"] = {k: control_hashes[k] == observed_hashes[k] for k in control_hashes}
         if not all(report["equal"].values()):
             raise AssertionError("Observer/control post-state parity failed")
+        if checkpoint_model:
+            from .production_coordinates import canonical_views
+            from .production_displacement import save_displacement
+            progress("save_canonical_displacement")
+            displacement=save_displacement(canonical_views(parent["parameters"],mapping),
+                                          canonical_views(parameters(worker),mapping),root/"delta")
+            report["canonical_displacement"]={k:v for k,v in displacement.items() if k!="parameters"}
         report["status"] = "passed"
         worker._parity_gate_done = True
         return control_result

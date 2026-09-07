@@ -27,7 +27,7 @@
          # this is for local ray cluster
 -        ray.init(runtime_env={"env_vars": {"TOKENIZERS_PARALLELISM": "true", "NCCL_DEBUG": "WARN"}})
 +        env_vars = {"TOKENIZERS_PARALLELISM": "true", "NCCL_DEBUG": "WARN"}
-+        for key in ("PRAXIS_PARITY_DIR", "PRAXIS_REWARD_CONTRACT", "PYTHONPATH", "FLASH_ATTENTION_DETERMINISTIC"):
++        for key in ("PRAXIS_PARITY_DIR", "PRAXIS_PARENT_MODEL", "PRAXIS_REWARD_CONTRACT", "PYTHONPATH", "FLASH_ATTENTION_DETERMINISTIC"):
 +            if key in os.environ:
 +                env_vars[key] = os.environ[key]
 +        ray.init(runtime_env={"env_vars": env_vars})
