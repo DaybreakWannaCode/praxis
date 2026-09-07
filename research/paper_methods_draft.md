@@ -1,8 +1,11 @@
 # Working methods text — development draft
 
 This draft defines the study; it does not claim completed prediction or selection
-results. The full-parameter fixed-input observer gate has passed. Production visual
-measurements, final split auditing and the confirmatory design freeze remain open.
+results. The full-parameter fixed-input observer gate and two-candidate visual
+integration have passed. A separately frozen four-candidate development precision
+check is queued; its result and horizon decision remain open. The development
+scene audit is complete within its stated limits. Confirmatory design and
+final-test splits are not frozen by this engineering milestone.
 
 ## Question and objectives
 
@@ -40,6 +43,23 @@ reward-standard-deviation normalization or response-length averaging. Images
 with constant sampled reward produce a zero estimated contribution and remain
 in the denominator. Record this frequency rather than silently dropping them.
 
+Writing z_i for a probe question and image, the estimator is
+
+$$
+\widehat g_V = \frac{1}{nK}\sum_{i=1}^{n}\sum_{j=1}^{K}
+\left(r_{ij}-\frac{1}{K-1}\sum_{\ell\ne j}r_{i\ell}\right)
+\nabla_\theta\log\pi_\theta(y_{ij}\mid z_i).
+$$
+
+Conditional on the image and frozen policy, the leave-one-out baseline is
+independent of response j. Its expected product with the response score gradient
+is zero because the expected score gradient is zero. Under the usual
+interchange-of-gradient-and-expectation conditions, this gives an unbiased
+estimator of the finite-panel expected-correctness gradient. This statement is
+about the ideal policy-gradient estimator; finite-precision automatic
+differentiation and limited Monte Carlo draws remain practical approximations.
+No derivative is taken through the binary parser or reward.
+
 Independent response repeats estimate Monte Carlo uncertainty for fixed probe
 images and fixed candidate displacements. They do not by themselves estimate
 generalization uncertainty across images, parents or tasks. Preserve per-image
@@ -55,8 +75,11 @@ and does not establish performance across the entire benchmark.
 ## Controlled branches and intervention
 
 Compare candidate text updates from the same warm parent, including its Adam
-moments, scheduler, RNG and required rollout/driver state. Verify replay and
-ensure the next learning rate is nonzero. Audit fixed-input observer parity
+moments, scheduler and captured worker RNG/state. Start each production branch in
+a fresh trainer/rollout process. A fixed candidate was reconstructed identically
+across fresh processes; this is narrower than a general guarantee of arbitrary
+driver or vLLM engine serialization. Ensure the next learning rate is nonzero.
+Audit fixed-input observer parity
 against the uninstrumented original update. Map visual gradients and realized
 updates into the same canonical parameters, excluding padding and duplicate tied
 aliases. No image-gradient optimizer step is applied.
@@ -67,6 +90,17 @@ shared-parent effects. Within-parent comparisons are primary: branches sharing
 a parent and images are not independent observations. The bounded development
 check will lock the horizon and affordable response budget before confirmatory
 runs, even if the result is unresolved or null.
+
+For the development precision check, independent response repeats produce paired
+alignment contrasts for each candidate pair. Outcome comparisons share random
+seeds within an image/completion pair and reset the seed for each completion.
+This coupling can reduce variance without changing either policy's marginal
+expected correctness. A separate unchanged-parent control uses independent
+seeds. Conservative fixed-panel outcome intervals and approximate score-repeat
+intervals are reported separately from image variation. The frozen development
+decision uses a two-percentage-point practical resolution and does not require
+positive transfer or agreement between alignment and outcomes. Its exact budget,
+limitations and H=4 fallback are specified in `production_precision_lock.md`.
 
 The subsequent selection experiment compares alignment, random and cosine
 selection with matched training-update budgets and recorded token/scoring costs.
