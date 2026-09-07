@@ -53,3 +53,20 @@ buffers, Adam, scheduler and worker state match exactly. Its parity phase took
 443.50 seconds. Reports and optimizer-step records were archived privately.
 The driver generated a fresh rollout for step 2. This is one passing step,
 not a completed four-step chain or visual-transfer result.
+
+## First candidate export failure
+
+All four GPU steps passed control/observer parity and state-chain validation.
+The process exited 1 after 2,194.98 seconds when total-displacement export
+rejected a nonfinite or non-reconstructing FP32 difference. No visual sampling
+ran and no other candidate launched. The GPU was idle after termination.
+
+The exporter assumes FP32 subtraction followed by addition exactly recovers
+the child. This is not generally true: a CPU counterexample with parent 1.0
+and child float32(1e-8) is finite but fails reconstruction; FP64 succeeds.
+That demonstrates an encoding limitation, not proof of this failed tensor
+being finite. The existing error does not distinguish the two causes.
+Repair must preserve exact child reconstruction, validate finite values, retain
+this failed attempt and its cost, and verify any replay against all four saved
+step reports. Do not relax the exactness gate or count this as a completed
+H4 visual experiment.
