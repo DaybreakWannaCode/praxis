@@ -41,5 +41,5 @@ The launcher requires tmux and verifies frozen file hashes and final completion.
 
 H=4 has not launched. Confirm network-volume headroom, deploy the launcher, and
 run the first frozen candidate to validate the full GPU path before proceeding
-with the other three. Preserve all completed H=1 artifacts. The volume expansion
-request from 100 GB to 150 GB is pending.
+with the other three. Preserve all completed H=1 artifacts. The user confirmed network-volume expansion on 2026-09-08; the exact new quota
+has not been independently verified. The pod was idle at the decision review.
