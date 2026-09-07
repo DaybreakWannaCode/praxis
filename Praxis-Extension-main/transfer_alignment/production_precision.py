@@ -22,6 +22,8 @@ from .production_visual import FullVisualBackend
 
 
 def validate(cfg, source_manifest, gates):
+    if cfg.get("frozen") is not True:
+        raise ValueError("Draft precision configurations cannot run")
     if not 4 <= len(gates) <= 8:
         raise ValueError("Precision check requires four to eight fixed candidates")
     if not 3 <= cfg["probe_repeats"] <= 8 or not 2 <= cfg["probe_samples"] <= 16:

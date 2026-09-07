@@ -27,7 +27,7 @@ class PrecisionContractTests(unittest.TestCase):
             (gate/'parity.json').write_text(json.dumps(report))
             (gate/'coordinates.json').write_text('{}')
             self.gates.append(gate)
-        self.cfg={'probe_repeats':4,'probe_samples':4,'outcome_samples':8,'horizon':1,
+        self.cfg={'frozen':True,'probe_repeats':4,'probe_samples':4,'outcome_samples':8,'horizon':1,
                   'scene_audit':str(audit),'scene_audit_sha256':hashlib.sha256(audit.read_bytes()).hexdigest(),
                   'visual_manifest_sha256':hashlib.sha256(self.manifest.read_bytes()).hexdigest(),
                   'candidate_gates':list(map(str,self.gates)),'decision_rule':'fixed precision threshold',
@@ -47,6 +47,10 @@ class PrecisionContractTests(unittest.TestCase):
 
     def test_locked_valid_budget(self):
         self.assertEqual(len(self.check()[0]),4)
+
+    def test_draft_cannot_run(self):
+        self.cfg['frozen']=False
+        with self.assertRaisesRegex(ValueError,'Draft'):self.check()
 
     def test_changed_budget_rejected(self):
         self.cfg['response_budget']+=1
