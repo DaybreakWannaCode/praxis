@@ -17,7 +17,7 @@ from .core import derived_seed, digest, dot, seed_all, trainables
 from .data import load_manifest
 from .experiment import append_json, response_record, visual_gradient, write_json
 from .production_displacement import load_tensor
-from .production_statistics import alignment_contrasts, outcome_contrast
+from .production_statistics import alignment_contrasts, outcome_contrast, precision_decision
 from .production_visual import FullVisualBackend
 
 
@@ -177,6 +177,9 @@ def run(cfg, source_manifest, gates, output):
              "max_torch_allocated_bytes":torch.cuda.max_memory_allocated(),
              "scores":sealed,"parent_contrasts":contrasts,"candidate_contrasts":pairwise,
              "parent_replay_exact":True,"scope":"Fixed-parent development precision; no population transfer claim"}
+    summary["precision_decision"]=precision_decision(sealed["pairwise"],pairwise,
+        resolution=cfg["decision_rule"]["resolution"],
+        minimum_pairs=cfg["decision_rule"]["minimum_jointly_resolved_pairs"])
     write_json(output/"summary.json",summary)
     record=json.loads((output/"manifest.json").read_text())
     record["status"]="complete"

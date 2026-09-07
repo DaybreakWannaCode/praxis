@@ -3,7 +3,7 @@ import unittest
 
 import numpy as np
 
-from transfer_alignment.production_statistics import bernoulli_kl_interval, outcome_contrast, alignment_contrasts
+from transfer_alignment.production_statistics import bernoulli_kl_interval, outcome_contrast, alignment_contrasts, precision_decision
 
 
 class StatisticsTests(unittest.TestCase):
@@ -42,6 +42,16 @@ class StatisticsTests(unittest.TestCase):
     def test_bad_layout_and_nonbinary_outcomes_rejected(self):
         with self.assertRaises(ValueError):outcome_contrast([[.5]],[[0]])
         with self.assertRaises(ValueError):alignment_contrasts(np.zeros((1,8,4)))
+
+    def test_precise_disagreement_and_practical_null_are_resolved(self):
+        scores=[{'first':0,'second':1,'approximate_t_interval':[.03,.04]},
+                {'first':0,'second':2,'approximate_t_interval':[-.01,.01]}]
+        outcomes=[{'first':0,'second':1,'pointwise':{'fixed_panel_interval':[-.04,-.03]}},
+                  {'first':0,'second':2,'pointwise':{'fixed_panel_interval':[-.01,.01]}}]
+        result=precision_decision(scores,outcomes,minimum_pairs=2)
+        self.assertEqual(result['h1_decision'],'retain_H1')
+        outcomes[1]['pointwise']['fixed_panel_interval']=[-.1,.1]
+        self.assertEqual(precision_decision(scores,outcomes,minimum_pairs=2)['h1_decision'],'test_predeclared_H4')
 
 
 if __name__=='__main__':unittest.main()

@@ -83,3 +83,27 @@ def alignment_contrasts(projected, alpha=.05):
                      "descriptive_image_sem":float(image_means.std(ddof=1)/len(image_means)**.5) if len(image_means)>1 else None,
                      "note":"t interval is an approximation with few response repeats; image variation is separate"})
     return rows
+
+
+def precision_decision(score_pairs, outcome_pairs, *, resolution=.02, minimum_pairs=4):
+    """Frozen exploratory resolution rule; agreement/positive effects not required."""
+    def classify(bounds):
+        low,high=bounds
+        if not math.isfinite(low+high) or low>high:raise ValueError("Invalid interval")
+        direction=1 if low>0 else (-1 if high<0 else 0)
+        tied=low>=-resolution and high<=resolution
+        return {"direction":direction,"practically_tied":tied,"resolved":bool(direction or tied)}
+    scores={(r['first'],r['second']):r for r in score_pairs}
+    outcomes={(r['first'],r['second']):r for r in outcome_pairs}
+    if scores.keys()!=outcomes.keys() or not scores:raise ValueError("Pair inventories differ")
+    rows=[]
+    for key in sorted(scores):
+        a=classify(scores[key]['approximate_t_interval'])
+        y=classify(outcomes[key]['pointwise']['fixed_panel_interval'])
+        rows.append({'first':key[0],'second':key[1],'score':a,'outcome':y,
+                     'jointly_resolved':a['resolved'] and y['resolved']})
+    count=sum(r['jointly_resolved'] for r in rows)
+    return {'resolution':resolution,'jointly_resolved_pairs':count,'required_pairs':minimum_pairs,
+            'h1_decision':'retain_H1' if count>=minimum_pairs else 'test_predeclared_H4',
+            'pairs':rows,'main_sweep_authorized':False,
+            'caveat':'Exploratory pointwise rule; approximate score intervals; ties do not establish ranking variation'}
