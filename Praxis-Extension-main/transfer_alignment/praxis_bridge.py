@@ -18,7 +18,7 @@ from .experiment import append_json, write_json
 
 
 class PraxisStepRecorder:
-    def __init__(self, actor, output, *, scope="single_process", visual_gradient=None):
+    def __init__(self, actor, output, *, scope="single_process", visual_gradient=None, save_delta=True):
         from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
         if getattr(actor,"_transfer_alignment_recorder",None) is not None:
             raise ValueError("Actor already has an optimizer recorder")
@@ -37,6 +37,7 @@ class PraxisStepRecorder:
         if scope=="rank_local" and visual_gradient is not None:
             raise ValueError("Global visual-gradient alignment is not validated for local shards")
         self.scope=scope
+        self.save_delta=save_delta
         self.output=Path(output)/f"rank-{self.rank:05d}"
         self.output.mkdir(parents=True,exist_ok=False)
         self.params={}
@@ -71,6 +72,7 @@ class PraxisStepRecorder:
             "scope":scope,"rank":self.rank,"world_size":self.world_size,"fsdp":sharded,
             "source_sha256":hashlib.sha256(source).hexdigest() if source else None,
             "optimizer":type(self.optimizer).__qualname__,"torch":torch.__version__,
+            "save_delta":save_delta,
             "visual_gradient_digest":digest(self.gradient) if self.gradient is not None else None,
             "visual_gradient_reference":"fixed_at_attachment; stale after updates" if self.gradient is not None else None,
             "coordinates":[{"key":k,"name":names.get(id(p)),"shape":list(p.shape),"dtype":str(p.dtype)} for k,p in self.params.items()],
@@ -110,7 +112,8 @@ class PraxisStepRecorder:
         record["zero_displacement"]=record["update_norm"]==0.0
         if self.gradient is not None:
             record.update(alignment(self.gradient,delta))
-        torch.save(delta,self.output/f"delta-{self.attempt:06d}.pt")
+        if self.save_delta:
+            torch.save(delta,self.output/f"delta-{self.attempt:06d}.pt")
         append_json(self.output/"steps.jsonl",record)
         self.before=None
 

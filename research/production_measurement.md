@@ -1,0 +1,73 @@
+# Bounded original-Praxis alignment experiment
+
+This is the next development gate, not the 72-branch study. No final-test images,
+data-selection training or new LoRA calibration are authorized by this protocol.
+
+## Frozen reward roles
+
+`production_reward_contract.json` pins the original MCQ reward source and the
+visual parser plus its legacy dependency by SHA256. Text training uses the
+original returned composite score without coefficient changes. Per-response
+correctness, format, tag and length components are checked against the actual
+terminal token reward tensor, saved with token IDs and grouped by original GRPO
+UID. Group diagnostics include covariance: component variances need not add.
+
+Visual scoring and outcomes use `explicit_final_v2` binary extracted correctness.
+The probe uses sequence-summed log probabilities and RLOO with independent draws;
+no standard-deviation normalization, token averaging, KL, format or length bonus.
+Unconditional correctness is primary. Parse success, conditional correctness and
+truncation are separate diagnostics. Conditional correctness is not proof of
+improved reasoning. The answer-only likelihood surrogate remains disabled.
+
+The current parser hash is a development lock. An archived fixed 32-response
+parent panel was inspected for unparsed responses (four: two invalid final labels,
+two absent final choices). This does not prove absence of false-positive parses or
+complete the new production audit. Audit a fixed production development panel
+before confirming the parser lock; never tune it using final-test outcomes.
+
+## Gate 1: fixed-rollout update parity
+
+The opt-in `patches/praxis-production-parity.patch` wraps the original worker's
+`update_actor` entry. It preserves the original loss, clipping, optimizer and
+scheduler functions. For one warm input with nonzero next LR it:
+
+1. Checks and records per-response released-code rewards and saves exact input
+   tensors, responses, advantages, old/reference log probabilities and metadata.
+2. Snapshots optimizer parameters, buffers, full Adam/scheduler state, module modes,
+   process RNG and exposed rollout-manager state.
+3. Runs the uninstrumented original update, records complete post-state digests,
+   restores the parent, and verifies the restored state exactly.
+4. Runs the same fixed input through the original update with the observer enabled
+   and requires exact agreement in all captured post-state categories.
+
+This gate supports one rank only. Delta norms are measured but giant raw delta
+files are omitted for this parity-only run. The source patch disables child
+checkpoint saving in this mode to retain the existing warm parent and avoid
+rotating it. All activation is explicit through `PRAXIS_PARITY_DIR`; ordinary
+Praxis runs are unchanged. Use a fresh directory per attempt. Failed parity stops
+the run and attempts to restore the captured parent.
+
+Passing this gate does not establish fresh-rollout replay, driver replay, canonical
+visual-gradient coordinate matching, or distributed alignment. Those are the next
+gates, not assumptions justified by a fixed-input comparison. The original
+first-step zero LR is retained; the parent is the saved nonzero-LR step-two state.
+
+## Subsequent bounded measurement decision
+
+After coordinate/replay validation, freeze four candidate text batches and their
+realized H=1 updates. Use independent score-response repeats on fixed, larger
+scoring images and an independent development outcome panel with a parent/null
+control. Prespecify image IDs, generation settings, parser hashes, response budget,
+seeds, stopping budget and uncertainty calculations before generation. Retain
+per-image projections/outcomes and report unresolved rankings honestly.
+
+The exact larger image panel is not yet frozen: the engineering split needs a
+scene-family audit. Do not launch it merely by interpreting this document as a
+complete pre-registration. Fix its size using measured production cost, not
+whether preliminary correlations are favorable. H=4 is a single predeclared
+fallback, scored by parent gradient dot total four-step displacement; it is not
+the first-step score relabeled as a four-step forecast.
+
+Deliver two reproducible full-Praxis branches first, then the bounded precision
+decision with score/outcome uncertainty, cost, memory and a locked H=1 or H=4
+recommendation. A reliable null is distinct from inadequate measurement precision.

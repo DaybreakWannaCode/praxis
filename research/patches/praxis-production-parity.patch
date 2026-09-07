@@ -1,0 +1,48 @@
+--- a/verl/workers/fsdp_workers.py
++++ b/verl/workers/fsdp_workers.py
+@@ -419,6 +419,10 @@
+     @register(dispatch_mode=Dispatch.DP_COMPUTE_PROTO)
+     def update_actor(self, data: DataProto):
+         assert self._is_actor
++        import os
++        if os.getenv("PRAXIS_PARITY_DIR") and not getattr(self, "_parity_gate_active", False):
++            from transfer_alignment.production_parity import run_fixed_rollout_gate
++            return run_fixed_rollout_gate(self, data)
+         data = data.to(torch.cuda.current_device())
+ 
+         if self._use_param_offload:
+--- a/verl/trainer/main.py
++++ b/verl/trainer/main.py
+@@ -16,6 +16,7 @@
+ """
+ 
+ import json
++import os
+ 
+ import ray
+ from omegaconf import OmegaConf
+@@ -99,7 +100,11 @@
+ 
+     if not ray.is_initialized():
+         # this is for local ray cluster
+-        ray.init(runtime_env={"env_vars": {"TOKENIZERS_PARALLELISM": "true", "NCCL_DEBUG": "WARN"}})
++        env_vars = {"TOKENIZERS_PARALLELISM": "true", "NCCL_DEBUG": "WARN"}
++        for key in ("PRAXIS_PARITY_DIR", "PRAXIS_REWARD_CONTRACT", "PYTHONPATH", "FLASH_ATTENTION_DETERMINISTIC"):
++            if key in os.environ:
++                env_vars[key] = os.environ[key]
++        ray.init(runtime_env={"env_vars": env_vars})
+ 
+     runner = Runner.remote()
+     ray.get(runner.run.remote(ppo_config))
+--- a/verl/trainer/ray_trainer.py
++++ b/verl/trainer/ray_trainer.py
+@@ -478,6 +478,9 @@
+         self.actor_rollout_wg.init_model()
+ 
+     def _save_checkpoint(self) -> None:
++        if os.getenv("PRAXIS_PARITY_DIR"):
++            print("Parity-only gate: child checkpoint saving is disabled; warm parent retained.")
++            return
+         # path: {save_checkpoint_path}/global_step_{global_step}/{actor,critic}
+         remove_obsolete_ckpt(
+             self.config.trainer.save_checkpoint_path, self.global_step, self.config.trainer.save_limit
