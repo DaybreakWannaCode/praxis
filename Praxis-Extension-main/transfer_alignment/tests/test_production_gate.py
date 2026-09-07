@@ -1,4 +1,5 @@
 import json
+import copy
 import os
 from pathlib import Path
 import tempfile
@@ -8,9 +9,12 @@ from unittest.mock import patch
 
 import torch
 
-from transfer_alignment.production_parity import run_fixed_rollout_gate, snapshot
+from transfer_alignment.production_parity import run_fixed_rollout_gate, snapshot, state_digests
 from transfer_alignment.production_rewards import group_diagnostics
+from transfer_alignment.production_rewards import audit_text_batch
 from transfer_alignment.core import digest
+from transfer_alignment.praxis_bridge import PraxisStepRecorder
+from transfer_alignment.production_coordinates import flat_segments, canonical_views, verify_values
 
 
 class Worker:
@@ -39,6 +43,89 @@ class Worker:
 
 
 class ProductionGateTests(unittest.TestCase):
+    def test_streamed_observer_matches_full_delta_record(self):
+        worker=Worker()
+        worker.update_actor(None)
+        state=copy.deepcopy(worker.fsdp_module.state_dict())
+        opt=copy.deepcopy(worker.optimizer.state_dict())
+        with tempfile.TemporaryDirectory() as folder:
+            records=[]
+            for save in (True,False):
+                worker.fsdp_module.load_state_dict(state)
+                worker.optimizer.load_state_dict(copy.deepcopy(opt))
+                path=Path(folder)/str(save)
+                with PraxisStepRecorder(worker.actor,path,save_delta=save):
+                    worker.update_actor(None)
+                records.append(json.loads((path/"rank-00000/steps.jsonl").read_text()))
+            self.assertEqual(records[0],records[1])
+
+    def test_canonical_padding_and_tied_alias_validation(self):
+        flat=torch.tensor([1.,2.,999.,3.,4.])
+        flat._fqns=("embed.weight","layer.weight")
+        flat._shapes=((2,),(1,2))
+        flat._numels=(2,2)
+        flat._numels_with_padding=(2,1,2)
+        flat._is_padding_mask=(False,True,False)
+        segments=flat_segments(flat,"_fsdp_wrapped_module","p")
+        mapping={"segments":segments,"aliases":{"head.weight":"embed.weight"}}
+        canonical=canonical_views({"p":flat},mapping)
+        self.assertEqual(sum(v.numel() for v in canonical.values()),4)
+        full={k:v.clone() for k,v in canonical.items()}
+        full["head.weight"]=full["embed.weight"].clone()
+        self.assertEqual(verify_values({"p":flat},mapping,full)["canonical_numel"],4)
+        full["head.weight"][0]=0
+        with self.assertRaisesRegex(ValueError,"Tied checkpoint"):
+            verify_values({"p":flat},mapping,full)
+        flat._numels_with_padding=(2,1,1)
+        with self.assertRaisesRegex(ValueError,"segment size"):
+            flat_segments(flat,"","p")
+
+    def test_live_hashes_match_immutable_snapshot(self):
+        worker=Worker()
+        worker.update_actor(None)
+        with patch("torch.cuda.synchronize"):
+            expected={k:digest(v) for k,v in snapshot(worker).items()}
+            self.assertEqual(state_digests(worker),expected)
+            worker.update_actor(None)
+            self.assertNotEqual(state_digests(worker)["optimizer"],expected["optimizer"])
+
+    def test_parity_failure_restores_parent(self):
+        worker=Worker()
+        worker.update_actor(None)
+        data=SimpleNamespace(batch={"x":torch.ones(1)},meta_info={},non_tensor_batch={})
+        original=PraxisStepRecorder._after_step
+        def corrupt(recorder,*args):
+            original(recorder,*args)
+            with torch.no_grad():
+                next(iter(recorder.params.values())).add_(1.)
+        with tempfile.TemporaryDirectory() as folder, patch.dict(os.environ,{
+                "PRAXIS_PARITY_DIR":str(Path(folder)/"gate"),"PRAXIS_REWARD_CONTRACT":"unused"}), \
+                patch("torch.cuda.synchronize"), patch("torch.distributed.get_world_size",return_value=1), \
+                patch("transfer_alignment.production_parity.audit_text_batch"):
+            before=digest(snapshot(worker))
+            with patch.object(PraxisStepRecorder,"_after_step",corrupt):
+                with self.assertRaisesRegex(AssertionError,"post-state parity"):
+                    run_fixed_rollout_gate(worker,data,scorer=lambda *_:None)
+            self.assertEqual(before,digest(snapshot(worker)))
+            self.assertEqual(json.loads((Path(folder)/"gate/parity.json").read_text())["status"],"failed")
+
+    def test_audit_checks_actual_terminal_rewards(self):
+        scores={"overall":1.8,"accuracy":1.,"format":1.,"tag_count":0.,"length":0.}
+        row=SimpleNamespace(batch={"responses":torch.tensor([7,0]),
+            "response_mask":torch.tensor([1,0]),"token_level_scores":torch.tensor([1.8,0.])},
+            non_tensor_batch={"ground_truth":"A","uid":"fixed-prompt"})
+        class Batch:
+            def __len__(self):return 1
+            def __getitem__(self,i):return row
+        tokenizer=SimpleNamespace(decode=lambda *a,**k:"<answer>A</answer>")
+        with tempfile.TemporaryDirectory() as folder, patch("transfer_alignment.production_rewards.verify_contract",return_value={}):
+            audit_text_batch(Batch(),tokenizer,lambda *_:scores,folder,"unused")
+            saved=json.loads((Path(folder)/"text-rewards.jsonl").read_text())
+            self.assertEqual(saved["components"],scores)
+            row.batch["token_level_scores"][0]=0.
+            with self.assertRaisesRegex(ValueError,"reward tensor"):
+                audit_text_batch(Batch(),tokenizer,lambda *_:scores,folder,"unused")
+
     def test_warm_fixed_rollout_parity_and_no_delta_file(self):
         worker=Worker()
         worker.update_actor(None)

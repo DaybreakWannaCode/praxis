@@ -101,6 +101,28 @@ class PraxisStepRecorder:
         self.before=self._snapshot()
 
     def _after_step(self, optimizer, args, kwargs):
+        if not self.save_delta and self.gradient is None:
+            # Parity-only runs need an exact norm/digest, not three simultaneous
+            # full-model copies (before, after, delta) on the host.
+            squared=0.0
+            for k in sorted(self.params):
+                after=self.params[k].detach().float().cpu().reshape(-1)
+                before=self.before[k].reshape(-1)
+                for start in range(0,before.numel(),262144):
+                    d=after[start:start+262144]-before[start:start+262144]
+                    if not torch.isfinite(d).all():
+                        raise FloatingPointError("Nonfinite realized Praxis displacement")
+                    squared+=(d.double()*d.double()).sum().item()
+            if not math.isfinite(squared):
+                raise FloatingPointError("Nonfinite realized Praxis displacement norm")
+            record={"attempt":self.attempt,"status":"applied","scope":self.scope,
+                    "before_digest":digest(self.before),
+                    "after_digest":digest({k:p.detach().float() for k,p in self.params.items()}),
+                    "update_norm":squared**0.5,"learning_rates_at_step":self.learning_rates_at_step,
+                    "zero_displacement":squared==0.0}
+            append_json(self.output/"steps.jsonl",record)
+            self.before=None
+            return
         after=self._snapshot()
         delta={k:after[k]-v for k,v in self.before.items()}
         if not all(torch.isfinite(d).all() for d in delta.values()):

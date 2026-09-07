@@ -69,7 +69,9 @@ def digest(value):
         if isinstance(v, torch.Tensor):
             t = v.detach().cpu().contiguous()
             h.update(str((t.dtype, tuple(t.shape))).encode())
-            h.update(t.reshape(-1).view(torch.uint8).numpy().tobytes())
+            # Feed the contiguous buffer directly: full-model tensors can be GBs.
+            # tobytes() would allocate another equally large temporary copy.
+            h.update(memoryview(t.reshape(-1).view(torch.uint8).numpy()))
         elif isinstance(v, np.ndarray):
             h.update(str((v.dtype, v.shape)).encode())
             h.update(v.tobytes())

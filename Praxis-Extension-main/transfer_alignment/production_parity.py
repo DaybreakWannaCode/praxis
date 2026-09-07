@@ -34,6 +34,17 @@ def snapshot(worker):
             "worker": capture_worker_state(worker, rank=0, world_size=1)}
 
 
+def state_digests(worker):
+    """Hash idle live state without retaining a second full model/Adam snapshot."""
+    torch.cuda.synchronize()
+    values = {"parameters": parameters(worker),
+              "buffers": dict(worker.fsdp_module.named_buffers()),
+              "optimizer": worker.optimizer.state_dict(),
+              "scheduler": worker.lr_scheduler.state_dict(),
+              "worker": capture_worker_state(worker, rank=0, world_size=1)}
+    return {k: digest(v) for k,v in values.items()}
+
+
 def restore(worker, state):
     current = parameters(worker)
     if current.keys() != state["parameters"].keys():
@@ -68,6 +79,8 @@ def run_fixed_rollout_gate(worker, data, *, scorer=None):
               "not_validated": ["fresh rollout replay", "driver replay", "visual alignment"],
               "deterministic_flash_attention": os.environ.get("FLASH_ATTENTION_DETERMINISTIC")}
     start = time.monotonic()
+    def progress(stage):
+        write_json(root / "progress.json", {"stage":stage,"elapsed_seconds":time.monotonic()-start})
     worker._parity_gate_active = True
     parent = None
     try:
@@ -81,24 +94,24 @@ def run_fixed_rollout_gate(worker, data, *, scorer=None):
                                          "metadata": data.meta_info,
                                          "non_tensor": {k: v.tolist() if hasattr(v,"tolist") else v
                                                         for k,v in data.non_tensor_batch.items()}})
+        progress("capture_parent")
         parent = snapshot(worker)
         report["parent_digests"] = {k: digest(v) for k,v in parent.items()}
+        progress("control_update")
         control_result = worker.update_actor(copy.deepcopy(data))
-        control = snapshot(worker)
-        control_hashes = {k: digest(v) for k,v in control.items()}
-        del control
+        progress("hash_control")
+        control_hashes = state_digests(worker)
         gc.collect()
+        progress("restore_parent")
         restore(worker, parent)
-        restored = snapshot(worker)
-        restored_hashes = {k: digest(v) for k,v in restored.items()}
-        del restored
+        restored_hashes = state_digests(worker)
         if restored_hashes != report["parent_digests"]:
             raise AssertionError("Warm parent restoration differs before replay")
+        progress("observer_update")
         with PraxisStepRecorder(worker.actor, root / "observer", scope="rank_local", save_delta=False):
             worker.update_actor(copy.deepcopy(data))
-        observed = snapshot(worker)
-        observed_hashes = {k: digest(v) for k,v in observed.items()}
-        del observed
+        progress("hash_observed")
+        observed_hashes = state_digests(worker)
         report["control_digests"] = control_hashes
         report["observed_digests"] = observed_hashes
         report["equal"] = {k: control_hashes[k] == observed_hashes[k] for k in control_hashes}
@@ -116,4 +129,5 @@ def run_fixed_rollout_gate(worker, data, *, scorer=None):
     finally:
         report["elapsed_seconds"] = time.monotonic()-start
         write_json(root / "parity.json", report)
+        progress(report["status"])
         worker._parity_gate_active = False

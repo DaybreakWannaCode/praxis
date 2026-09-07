@@ -52,6 +52,20 @@ visual-gradient coordinate matching, or distributed alignment. Those are the nex
 gates, not assumptions justified by a fixed-input comparison. The original
 first-step zero LR is retained; the parent is the saved nonzero-LR step-two state.
 
+### Executed status (2026-09-07)
+
+The H100, one-rank original full-parameter gate passed using source `cbd78e3`:
+all captured control/observer post-state categories matched exactly after warm
+restoration. This was a fixed-input integrity check, not visual-transfer evidence.
+Detailed logs, reward audit and hashes remain in ignored local
+`runs/production-gate-20260907/`. The warm parent was retained.
+
+Follow-up memory changes avoid extra complete post-state snapshots and stream the
+parity-only delta norm. Small-model tests check equivalence, intentional corruption,
+and restoration on failure. These changes have not yet been revalidated on the GPU.
+`production_coordinates.py` provides a fail-closed one-rank FSDP mapping with
+padding exclusion and tied-alias validation; it is not yet production validated.
+
 ## Subsequent bounded measurement decision
 
 After coordinate/replay validation, freeze four candidate text batches and their
