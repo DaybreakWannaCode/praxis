@@ -16,6 +16,7 @@ from transfer_alignment.core import digest
 from transfer_alignment.praxis_bridge import PraxisStepRecorder
 from transfer_alignment.production_coordinates import flat_segments, canonical_views, verify_values
 from transfer_alignment.production_displacement import save_displacement, load_tensor
+from transfer_alignment.production_visual import FullVisualBackend
 
 
 class Worker:
@@ -44,6 +45,21 @@ class Worker:
 
 
 class ProductionGateTests(unittest.TestCase):
+    def test_visual_child_load_always_starts_from_parent(self):
+        backend=FullVisualBackend.__new__(FullVisualBackend)
+        backend.model=torch.nn.Linear(2,1)
+        backend.parent_state=copy.deepcopy(backend.model.state_dict())
+        backend.buffers={}
+        child={n:v+1e-5 for n,v in backend.parent_state.items()}
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder)/"delta"
+            manifest=save_displacement(backend.parent_state,child,root)
+            for _ in range(2):
+                backend.apply_displacement(root,manifest)
+                for n,p in backend.model.named_parameters():self.assertTrue(torch.equal(p,child[n]))
+            backend.restore_parent()
+            for n,p in backend.model.named_parameters():self.assertTrue(torch.equal(p,backend.parent_state[n]))
+
     def test_lossless_displacement_roundtrip_and_corruption(self):
         before={"a":torch.tensor([1.,-2.,0.]),"b":torch.zeros(2,3)}
         after={"a":before["a"]+torch.tensor([1e-6,-1e-6,1e-8]),"b":before["b"].clone()}

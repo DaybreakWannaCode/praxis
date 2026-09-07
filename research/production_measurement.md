@@ -64,7 +64,30 @@ Follow-up memory changes avoid extra complete post-state snapshots and stream th
 parity-only delta norm. Small-model tests check equivalence, intentional corruption,
 and restoration on failure. These changes have not yet been revalidated on the GPU.
 `production_coordinates.py` provides a fail-closed one-rank FSDP mapping with
-padding exclusion and tied-alias validation; it is not yet production validated.
+padding exclusion and tied-alias validation. Its value check against the retained
+checkpoint passed for 3,754,622,976 canonical elements, with `lm_head.weight`
+verified as an alias of `model.embed_tokens.weight`. Visual-gradient use remains
+unvalidated; the follow-up gate is exporting the canonical displacement.
+
+### Fixed first integration budget
+
+Before visual scores, the two-branch integration controls were fixed at seed
+20260912, eight existing engineering scoring images × four responses and four
+existing independent development images × four responses for each of parent,
+same-seed parent replay, independent parent repeat and two children (112 responses
+total). Scoring IDs: 388, 872, 631, 1026, 731, 899, 985, 398. Development IDs: 973,
+1152, 142, 789 (all `viva-` prefixed). The second four-prompt candidate uses seed
+20260911, excluding exact normalized original train/validation prompts; source
+indices are 9683, 3890, 2858, 944 in the pinned text parquet. No alignment outcome
+was used to choose them. Full scene-family auditing remains open.
+
+This closes integration only; it is not the larger production precision check.
+The original full-parameter trainer produces displacements; the visual-only
+backend has no optimizer and defines one consistent HF/BF16-autocast policy for
+sampling and gradient scoring with FP32 master coordinates. Its GPU validation
+is pending. Child loading, compressed roundtrips and failure guards have small
+CPU regression checks. The visual run has a 45-minute external limit; no favorable
+seed retries or extra images are added based on outcomes.
 
 ## Subsequent bounded measurement decision
 
