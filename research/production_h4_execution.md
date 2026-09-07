@@ -45,3 +45,11 @@ The launcher passed its input checks and Ray initialized. Four-step GPU parity
 and the total export remain unverified; candidates 1–3 and visual evaluation
 have not launched. Preserve all completed H=1 artifacts. The user confirmed network-volume expansion on 2026-09-08; the exact new quota
 has not been independently verified. The pod was idle at the decision review.
+
+## First GPU step evidence
+
+Candidate 0 step 1 passed fixed-rollout control/observer parity: parameters,
+buffers, Adam, scheduler and worker state match exactly. Its parity phase took
+443.50 seconds. Reports and optimizer-step records were archived privately.
+The driver generated a fresh rollout for step 2. This is one passing step,
+not a completed four-step chain or visual-transfer result.
