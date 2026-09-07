@@ -56,6 +56,15 @@ class HorizonTests(unittest.TestCase):
                 validate_four_steps(roots)
 
 class HorizonDispatchTests(unittest.TestCase):
+    def test_inventory_ignores_order_but_preserves_text_gold_and_counts(self):
+        from types import SimpleNamespace
+        from transfer_alignment.production_horizon import prompt_inventory
+        def score(p,g):
+            return prompt_inventory(SimpleNamespace(non_tensor_batch=dict(problem=p,ground_truth=g)))
+        self.assertEqual(score(['a','b'],['A','B']),score(['b','a'],['B','A']))
+        self.assertNotEqual(score(['a','b'],['A','B']),score(['a','b'],['B','A']))
+        self.assertNotEqual(score(['a'],['A']),score(['a','a'],['A','A']))
+
     def test_h4_unresolved_is_terminal_budget_result(self):
         from transfer_alignment.production_statistics import precision_decision
         scores = [dict(first=0,second=1,approximate_t_interval=[-.1,.1])]
@@ -102,7 +111,7 @@ class HorizonWorkerTests(unittest.TestCase):
         reference.fsdp_module.load_state_dict(copy.deepcopy(worker.fsdp_module.state_dict()))
         reference.optimizer.load_state_dict(copy.deepcopy(worker.optimizer.state_dict()))
         reference.lr_scheduler.load_state_dict(copy.deepcopy(worker.lr_scheduler.state_dict()))
-        data = SimpleNamespace(batch={'x':torch.ones(1)}, meta_info={}, non_tensor_batch={})
+        data = SimpleNamespace(batch={'x':torch.ones(1)}, meta_info={}, non_tensor_batch={'problem':['fixed'], 'ground_truth':['A']})
         with tempfile.TemporaryDirectory() as folder, patch.dict(os.environ, {
                 'PRAXIS_PARITY_DIR':str(Path(folder)/'gate'),
                 'PRAXIS_PARENT_MODEL':'unused', 'PRAXIS_REWARD_CONTRACT':'unused'}), \

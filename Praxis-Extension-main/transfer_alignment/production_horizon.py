@@ -49,6 +49,19 @@ def validate_four_steps(roots):
     return reports
 
 
+def prompt_inventory(data):
+    """Order-independent text/gold inventory including rollout multiplicities."""
+    import hashlib
+    rows = data.non_tensor_batch
+    if 'problem' not in rows or 'ground_truth' not in rows:
+        raise ValueError('H=4 requires explicit text problem and ground truth')
+    problems, gold = rows['problem'], rows['ground_truth']
+    if len(problems) != len(gold) or not len(problems):
+        raise ValueError('Empty or mismatched H=4 text inventory')
+    pairs = sorted((str(p), str(g)) for p,g in zip(problems,gold))
+    return hashlib.sha256(json.dumps(pairs,ensure_ascii=False).encode()).hexdigest()
+
+
 def run_four_step_gate(worker, data, *, scorer=None):
     """Consume one fresh driver batch; export only after four verified calls.
 
@@ -66,6 +79,7 @@ def run_four_step_gate(worker, data, *, scorer=None):
 
     if os.environ.get('PRAXIS_FIXED_INPUT') or os.environ.get('PRAXIS_RESUME_DELTA_DIR'):
         raise ValueError('H=4 requires fresh driver inputs; H=1 recovery is forbidden')
+    inventory = prompt_inventory(data)
     state = getattr(worker, '_alignment_horizon', None)
     if state is None:
         if getattr(worker, '_parity_gate_done', False):
@@ -80,7 +94,8 @@ def run_four_step_gate(worker, data, *, scorer=None):
         validation = verify_values(parameters(worker), mapping, checkpoint)
         del checkpoint
         initial = {k: p.detach().cpu().clone() for k,p in parameters(worker).items()}
-        state.update(mapping=mapping, validation=validation, initial=initial, failed=False)
+        state.update(mapping=mapping, validation=validation, initial=initial, failed=False,
+                     prompt_inventory=inventory)
         write_json(root/'coordinates.json', mapping)
         write_json(root/'horizon.json', dict(status='running', horizon=4, completed_steps=0))
     if state['failed'] or state['count'] >= 4:
@@ -89,6 +104,8 @@ def run_four_step_gate(worker, data, *, scorer=None):
     step_root = root / f"step-{state['count']+1}"
     saved_env = {k: os.environ.get(k) for k in ('PRAXIS_PARITY_DIR','PRAXIS_PARENT_MODEL')}
     try:
+        if inventory != state['prompt_inventory']:
+            raise ValueError('H=4 candidate text inventory changed between updates')
         # Per-step parity retains all restore checks but avoids intermediate
         # delta exports and comparison of later weights to the initial parent.
         os.environ['PRAXIS_PARITY_DIR'] = str(step_root)
@@ -111,6 +128,7 @@ def run_four_step_gate(worker, data, *, scorer=None):
                                       canonical_views(parameters(worker), state['mapping']), root/'delta')
             combined = dict(report)
             combined.update(status='passed', horizon=4, completed_steps=4,
+                            prompt_inventory=inventory,
                             parent_digests=state['first']['parent_digests'],
                             canonical_validation=state['validation'],
                             canonical_displacement={k:v for k,v in delta.items() if k!='parameters'},
