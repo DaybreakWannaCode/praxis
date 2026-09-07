@@ -45,6 +45,13 @@ images and fixed candidate displacements. They do not by themselves estimate
 generalization uncertainty across images, parents or tasks. Preserve per-image
 projections so those sources of variation can be assessed separately.
 
+The gradient of a finite probe panel is not exactly the gradient of a different
+held-out panel. Transfer prediction therefore also tests generalization across
+images, beyond the local Taylor identity. Repeating response draws reduces
+sampling error conditional on the probe images; it cannot eliminate a systematic
+probe-to-outcome mismatch. The development image pool is availability-limited
+and does not establish performance across the entire benchmark.
+
 ## Controlled branches and intervention
 
 Compare candidate text updates from the same warm parent, including its Adam

@@ -62,12 +62,49 @@ Detailed logs, reward audit and hashes remain in ignored local
 
 Follow-up memory changes avoid extra complete post-state snapshots and stream the
 parity-only delta norm. Small-model tests check equivalence, intentional corruption,
-and restoration on failure. These changes have not yet been revalidated on the GPU.
+and restoration on failure. The optimized gate subsequently passed on the GPU
+for both fixed candidate batches (`production-parity-004` and `003`), including
+complete lossless canonical displacement export. Candidate norms were
+0.03164402032795481 and 0.02904879719391052. The recovery run verified every reused
+tensor against the replayed update; it did not trust incomplete export files.
 `production_coordinates.py` provides a fail-closed one-rank FSDP mapping with
 padding exclusion and tied-alias validation. Its value check against the retained
 checkpoint passed for 3,754,622,976 canonical elements, with `lm_head.weight`
-verified as an alias of `model.embed_tokens.weight`. Visual-gradient use remains
-unvalidated; the follow-up gate is exporting the canonical displacement.
+verified as an alias of `model.embed_tokens.weight`. The full visual backend has
+loaded that same layout and completed its first eight-image gradient/projection
+pass. Independent visual outcomes are still running; no transfer claim follows
+from this integration pass alone.
+
+### Bounded precision implementation
+
+`transfer_alignment.production_precision` consumes four to eight fixed, passed
+canonical gate artifacts from the same complete parent. It rejects final-test
+rows, overlapping scene families, changed manifest/audit hashes, changed candidate
+identities and response counts that differ from a frozen configuration. The
+current exporter supports H=1 only; the command explicitly rejects relabelling
+these one-step artifacts as H=4. A future H=4 run needs actual four-step total
+displacements and a separately frozen budget.
+
+Independent probe repeats estimate Monte Carlo variation in pairwise projected
+scores, conditional on the fixed image panel. Paired repeat differences retain
+covariance from the shared visual gradient. Approximate Student-t intervals with
+few repeats are diagnostics, not exact small-sample guarantees. Across-image
+variation is recorded separately and is not replaced by more response repeats.
+
+Parent and child outcomes use a fresh seed for every individual completion and
+common random numbers within each image/completion pair. This preserves each
+policy's marginal distribution while potentially reducing difference variance.
+An independent unchanged-parent control and exact replay of the first parent
+image are separate controls. Conservative sign-category Chernoff-KL intervals
+cover fixed-panel mean correctness differences under independent response cells,
+including heterogeneous image probabilities. In particular, observing no changed
+answers does not produce a zero-width confidence interval. Pointwise and
+Bonferroni candidate-pair intervals are reported separately. These intervals do
+not establish generalization beyond this development panel or parent.
+
+This runner and its contract/statistics tests are implemented locally. The larger
+response budget and additional candidate batches have not yet been frozen or run;
+they will be fixed using integration cost and parser checks before sampling.
 
 ### Fixed first integration budget
 
