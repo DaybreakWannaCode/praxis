@@ -17,3 +17,12 @@ includes worker RNG. Cross-process driver RNG replay is explicitly not claimed.
 Twenty local tests passed, including four real CPU AdamW recovery updates
 with deliberately different discarded driver tensors. Full GPU recovery and
 its launcher paths remain to be configured and verified after pod availability.
+
+Recovery started after the pod was confirmed still available: 34 relevant tests
+passed in `/opt/praxis-original`. The failed run was preserved as
+`/workspace/praxis/runs/production-h4-000-attempt-001`; the recovery writes to the
+original frozen candidate output path in tmux `praxis-h4-recovery-000`, capped
+at 7,200 seconds. Its config and text input hashes are unchanged. The source
+rollouts and four old state reports come from the preserved attempt. This new
+process is active, so pausing now would interrupt recovery. Completed evidence
+from the failed attempt remains locally archived.
