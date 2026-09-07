@@ -111,8 +111,10 @@ gradients, validation and checkpoint saving on one H100 80 GB. A full saved-weig
 comparison then found **zero parameter displacement**: the original constant
 scheduler initializes LR to zero even when warmup is zero. Its reported LR is
 logged after advancing the scheduler. The first step initializes Adam moments but
-does not move weights. A second step and another displacement check are required;
-successful execution and nonzero gradients alone do not validate an update.
+does not move weights. Resuming the saved Adam/scheduler state for step two
+completed successfully, and a full saved-weight comparison verified nonzero
+displacement. Tied embedding/head values were checked exactly and counted once.
+Successful execution and nonzero gradients alone do not validate an update.
 Do not downgrade the calibration environment.
 
 For the current pod, the original runtime lives in the isolated container path
@@ -142,8 +144,9 @@ network filesystem's shared backing capacity as the purchased volume quota.
 
 - The initial uninstrumented text-only run completed against the immutable supplied
   source snapshot, pinned base model and hashed text split, but its first step had
-  zero LR and zero displacement. Verify an actual nonzero second step before
-  instrumentation parity; paper-scale baseline reproduction remains outstanding.
+  zero LR and zero displacement. The resumed second step passed saved-weight
+  nonzero-displacement verification. Instrumentation parity, independent visual
+  evaluation and paper-scale baseline reproduction remain outstanding.
 - Repeat identical fixed-rollout optimizer work with instrumentation enabled and
   verify weights/state match. Keep rollout generation separate when isolating
   optimizer correctness.

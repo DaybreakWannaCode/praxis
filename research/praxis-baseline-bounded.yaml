@@ -1,6 +1,8 @@
 # Engineering baseline with the original unmodified trainer, not paper-scale reproduction.
 # Its scheduler initializes LR=0 even when warmup=0; two steps are necessary.
 # Paths are explicit for the existing pod. Data must be prepared and checked first.
+# For a new run, override save_checkpoint_path to a fresh directory; the original
+# trainer rotates checkpoints there according to save_limit.
 data:
   train_files: /workspace/praxis/data/original-baseline/train.parquet
   val_files: /workspace/praxis/data/original-baseline/val.parquet
