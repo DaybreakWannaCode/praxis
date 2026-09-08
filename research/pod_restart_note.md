@@ -41,3 +41,12 @@ establish whether the pod was paused, stopped, or merely unreachable. Do not
 restart candidate 1 based on this observation failure. On reconnection inspect
 its process, completion.json, train.exit and gate reports first; preserve any
 partial attempt before deciding on recovery.
+
+Latest pause-readiness check: direct SSH again closed the connection; the
+user-provided RunPod SSH gateway also timed out during banner exchange.
+Candidate 1 remains unobserved, not confirmed failed or completed. No duplicate
+was launched. Candidate 0's full displacement stays on the network volume;
+only its completion/integrity evidence is backed up locally. The Python runtime
+under `/opt/praxis-original` is outside the persistent volume and may require
+rebuilding after container replacement. Resume requires a working SSH endpoint
+and inspection of the existing candidate before starting further work.
