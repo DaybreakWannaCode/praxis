@@ -26,3 +26,18 @@ at 7,200 seconds. Its config and text input hashes are unchanged. The source
 rollouts and four old state reports come from the preserved attempt. This new
 process is active, so pausing now would interrupt recovery. Completed evidence
 from the failed attempt remains locally archived.
+
+## Connection interruption during candidate 1
+
+Candidate 0 subsequently completed and passed independent verification of all
+824 tensor files. Its result and integrity manifests are backed up locally.
+Candidate 1 (second frozen candidate) launched with unchanged inputs and a
+two-hour cap. Last successful observation: trainer PID 101269 / worker PID
+103347 were active, parent checkpoint restored, first 20-response text rollout
+generated. No completed optimizer-step report had yet been observed.
+
+Two subsequent direct-SSH attempts were closed by the endpoint. This does not
+establish whether the pod was paused, stopped, or merely unreachable. Do not
+restart candidate 1 based on this observation failure. On reconnection inspect
+its process, completion.json, train.exit and gate reports first; preserve any
+partial attempt before deciding on recovery.
