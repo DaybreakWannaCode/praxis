@@ -74,3 +74,11 @@ resuming: the queue intentionally refuses to overwrite an existing attempt.
 Restoration and queue scripts are saved directly under /workspace as well as
 in research/scripts locally. Runtime still resides on ephemeral container
 storage; the restoration script is persistent.
+
+Candidate 1 independent verification subsequently passed: all 824 tensor files,
+3,754,622,976 canonical elements, 254 FP64 tensors, total update norm
+0.09635380528837313. Completion and verification JSON records are backed up in
+the local ignored production-h4-001/completed directory. The queue advanced to
+training_candidate_2. The final visual launcher is saved as
+/workspace/run_h4_precision.sh (not launched); it requires all four independent
+export checks, uses the frozen manifest/config, and retains the ten-hour cap.
