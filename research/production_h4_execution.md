@@ -111,3 +111,19 @@ locally. The earlier failed 2,194.98-second attempt remains in the cost record.
 Candidate 1 (the second frozen candidate) was dispatched next in tmux
 `praxis-h4-001` with its unchanged config/input hashes and two-hour cap.
 Candidates 2–3 and the H4 visual precision measurement have not started.
+# Hardware change before remaining candidates — 2026-09-12
+
+The original H100 pod is no longer used. Candidates 0 and 1 were produced on
+H100 PCIe; candidates 2 and 3 resume on A100-SXM4-80GB, with the same archived
+software versions, parent checkpoint, optimizer state, candidate inputs and
+reward contract. GPU preflight and 34 measurement tests passed after restoring
+the runtime. Candidate 1 independently passed all 824 exported tensor checks.
+
+This hardware change is recorded before H4 visual outcomes. The planned H4
+visual measurement will evaluate all four saved displacements on the same A100.
+The estimand remains the visual effect of each actual recorded update, not the
+effect of a hardware-independent text gradient. We do not assume identical
+sampled trajectories across GPU architectures. Hardware is confounded with
+candidate identity in this small check, so it cannot establish hardware
+invariance or isolate a text-batch-only causal effect. Do not pool it with H1
+as a controlled horizon-only comparison. No extra hardware sweep is authorized.
