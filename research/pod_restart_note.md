@@ -50,3 +50,27 @@ only its completion/integrity evidence is backed up locally. The Python runtime
 under `/opt/praxis-original` is outside the persistent volume and may require
 rebuilding after container replacement. Resume requires a working SSH endpoint
 and inspection of the existing candidate before starting further work.
+
+## Resumed on replacement A100 — 2026-09-12
+
+RunPod MCP and direct SSH are working. The 150 GB volume in US-KS-2 is mounted
+on pod e8lcnuph2r1z3r (A100-SXM4-80GB, reported compute $1.59/hour), SSH
+root@216.81.245.126 port 19499. Original H100 hardware changed; record that
+distinction in the experiment analysis. No model/reward/config changes.
+
+Candidate 1 completion report survived: exit 0, four steps passed, 2344.50 s.
+Independent full-tensor verification is running in `praxis-verify-h4-001`.
+The original runtime was rebuilt in /opt/praxis-original from the archived
+freeze and checksum-pinned FlashAttention wheel. GPU preflight and 34 tests
+passed. Records are at runs/runtime-restore-20260912 on the pod and privately
+backed up locally under runs/production-gate-20260907/runtime-restore-20260912.
+
+`praxis-h4-resume` waits for candidate 1 export verification, then runs frozen
+candidates 2 and 3 sequentially, each capped at two hours, verifying each
+export afterwards. It stops on error and does not launch visual evaluation.
+Queue records: /workspace/praxis/runs/h4-resume-20260912/{stage.txt,queue.log,queue.exit}.
+If paused, inspect those records and existing candidate directories before
+resuming: the queue intentionally refuses to overwrite an existing attempt.
+Restoration and queue scripts are saved directly under /workspace as well as
+in research/scripts locally. Runtime still resides on ephemeral container
+storage; the restoration script is persistent.
