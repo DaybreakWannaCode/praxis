@@ -1,5 +1,11 @@
 # H=4 fallback execution status
 
+**Final status, 2026-09-12:** all four candidates and the 1,800-response visual
+evaluation completed and passed their integrity checks. H4 resolved 0/6 pairs;
+the bounded budget is insufficient. See [the final report](production_precision_h4_result.md).
+The dated sections below preserve the execution and repair history; their
+pending-work statements describe those earlier stages.
+
 H=1 completed with zero of six jointly resolved pairs. The predeclared fallback in
 `production_precision_lock.md` therefore applies. Its original protocol remains
 unchanged; this document records implementation and execution preparation.

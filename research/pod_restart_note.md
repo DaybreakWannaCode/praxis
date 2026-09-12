@@ -215,3 +215,20 @@ SHA-256 hashes match the remote file/prefix. The final child panel and eight
 exact parent replay responses remain pending. The original ten-hour cap and
 frozen protocol are unchanged. Partial response backups are not resumable
 process checkpoints; do not restart solely because monitoring disconnects.
+
+## H4 terminal completion and final audit
+
+The H4 evaluation completed with exit 0 and all 1800 responses. The live
+process is absent and GPU usage was observed at 0 MiB. All result/terminal
+files are saved locally under production-h4-precision-001/completed, with
+16 remote/local file hashes matched. The archive audit passed, exact parent
+replay passed, every raw reward/parse/choice reproduces, and sealed score and
+projection files match the pre-outcome backups. Final config, scene audit and
+all 48 image hashes match; no final-test rows were used.
+
+H4 resolves 0/6 pairs, as did H1; required 4/6. The final recommendation is
+bounded-budget insufficient. Do not restart evaluation, retry seeds, expand
+the horizon or launch main sweeps. See production_precision_h4_result.md and
+production_completion_audit.md. Measured H4 time 28287.040 s; process elapsed
+28303.237 s; torch peak 35.314 GiB; maximum child RSS 166.830 GiB. The pod is
+still provisioned and may incur idle charges even though the experiment ended.

@@ -21,6 +21,9 @@ Pointwise 95% fixed-panel intervals from the frozen paired sign-category Chernof
 
 Jointly resolved pairs: 0/6; required: 4/6. Decision: test the predeclared H=4 alternative once. All six outcome intervals contain zero and extend outside the practical-tie band of +/-2 percentage points.
 
-## Remaining work
+## Completed fallback
 
-Implement and verify four consecutive original updates with fresh on-policy rollouts for each unchanged candidate batch. Export the total initial-parent-to-step-four displacement. Preserve the warm parent, panels, parser, response counts, and fixed H=4 seed 20260917. Do not scale H=1 displacements or reuse its rollouts as four steps. H=4 has not launched.
+The predeclared H4 fallback subsequently completed with all 1,800 responses,
+exact replay, exit zero and a verified archive. It also resolved 0/6 pairs.
+See [the H4 report](production_precision_h4_result.md) for the combined decision:
+this bounded budget is insufficient; no main sweep or adaptive retry follows.
