@@ -185,3 +185,22 @@ SHA-256 hashes match the remote file/prefix. Two child panels and exact parent
 replay remain pending. No intermediate outcome values were used to change
 the frozen protocol. This partial backup does not make the live evaluation
 resumable after a pod interruption; retain the original ten-hour cap.
+
+## Final archive audit prepared while H4 outcomes run
+
+research/scripts/audit_precision_result.py is a read-only CPU audit. It checks
+complete status and exit, the ordered 1800-response inventory, disjoint split
+and scene-group inventories, binary rewards, reconstructed outcome matrices
+and aggregates, paired seeds, exact token replay, score copies, recomputed
+pointwise/simultaneous intervals and the frozen horizon decision, and resource
+records. It emits file hashes without exposing response text. It uses the
+production statistical definitions; it is not an independent proof of those
+definitions, parser correctness, training parity or gradient validity.
+
+Validation against completed H1 passed and reproduced zero jointly resolved
+pairs. Deliberately removing a response, modifying a replay token, and changing
+a confidence-interval endpoint were each rejected. Aggregate versus per-image
+projection reduction differs by at most 1.742425648210144e-11 in H1. The audit
+records residuals and uses an explicit FP32 cancellation-aware diagnostic
+tolerance; all other numeric reconstructions use strict tolerances. H4 final
+audit remains pending until the live job completes.
