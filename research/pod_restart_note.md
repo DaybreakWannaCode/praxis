@@ -156,3 +156,12 @@ parse and local SHA-256 hashes match the remote files/prefix. Independent null,
 four children and exact replay remain pending; preserve the original ten-hour
 cap and frozen protocol. This is a partial backup, not a resumable process
 checkpoint. Do not restart the evaluation solely because monitoring disconnects.
+
+## H4 independent control complete
+
+At 4:31:07 elapsed, process 30949 was live with 768 response records and both
+parent and independent-null outcome records complete. The control JSON and first
+768 responses are backed up locally under production-h4-precision-001/control-completed.
+All records parse, the control matrix is 32 by 8, and both SHA-256 hashes match
+the remote files/prefix. Four child panels and exact parent replay remain pending.
+No outcome values were used to change the frozen protocol or its ten-hour cap.
