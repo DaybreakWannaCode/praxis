@@ -174,3 +174,14 @@ are backed up locally under production-h4-precision-001/child-0-completed.
 All JSON records parse, the child matrix is 32 by 8, and both SHA-256 hashes
 match the remote files/prefix. Three child panels and exact parent replay remain
 pending. The frozen experiment and ten-hour cap remain unchanged.
+
+## H4 second updated-model panel complete
+
+The same evaluation process reached 1280 saved responses and produced
+outcome-child_1.json. The second child result and first 1280 responses are
+backed up locally under production-h4-precision-001/child-1-completed.
+All records parse, the child matrix is 32 by 8 (256 responses), and both
+SHA-256 hashes match the remote file/prefix. Two child panels and exact parent
+replay remain pending. No intermediate outcome values were used to change
+the frozen protocol. This partial backup does not make the live evaluation
+resumable after a pod interruption; retain the original ten-hour cap.
