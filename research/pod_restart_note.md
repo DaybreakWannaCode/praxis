@@ -124,3 +124,14 @@ A100 pod, using /workspace/run_h4_precision.sh. Output is
 checkpoint loading; no outcome or completion is available yet. The 1800-response
 budget, ten-hour cap, frozen seeds/config/splits and no-final-test restriction
 remain unchanged. Check process, run.exit and result evidence before any restart.
+
+## H4 visual scoring reached (2026-09-12, approximately 08:11 UTC)
+
+Live process 30949 progressed past displacement loading and began the scoring
+panel: 12 image-projection records were saved at the latest count. At 1:33:08
+elapsed, GPU memory was 37541 MiB and host process RSS 162024224 KiB. These are
+instantaneous observations, not final peak measurements. No exit record or
+outcome summary exists yet. Startup was substantially slower than the earlier
+H1 run; retain the original ten-hour cap. Monitor the same process/session,
+without restarting from an observation timeout. Interim alignment values were
+not used to modify the protocol.
