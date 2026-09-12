@@ -165,3 +165,12 @@ parent and independent-null outcome records complete. The control JSON and first
 All records parse, the control matrix is 32 by 8, and both SHA-256 hashes match
 the remote files/prefix. Four child panels and exact parent replay remain pending.
 No outcome values were used to change the frozen protocol or its ten-hour cap.
+
+## H4 first updated-model panel complete
+
+At 5:20:47 elapsed, process 30949 was live with 1024 response records and
+outcome-child_0.json complete. The first child result and first 1024 responses
+are backed up locally under production-h4-precision-001/child-0-completed.
+All JSON records parse, the child matrix is 32 by 8, and both SHA-256 hashes
+match the remote files/prefix. Three child panels and exact parent replay remain
+pending. The frozen experiment and ten-hour cap remain unchanged.
