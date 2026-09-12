@@ -204,3 +204,14 @@ projection reduction differs by at most 1.742425648210144e-11 in H1. The audit
 records residuals and uses an explicit FP32 cancellation-aware diagnostic
 tolerance; all other numeric reconstructions use strict tolerances. H4 final
 audit remains pending until the live job completes.
+
+## H4 third updated-model panel complete
+
+At 7:02:02 elapsed, process 30949 remained live with 1537 response records and
+outcome-child_2.json complete. The third child result and first 1536 responses
+are backed up locally under production-h4-precision-001/child-2-completed.
+All records parse, the child matrix is 32 by 8 (256 responses), and both
+SHA-256 hashes match the remote file/prefix. The final child panel and eight
+exact parent replay responses remain pending. The original ten-hour cap and
+frozen protocol are unchanged. Partial response backups are not resumable
+process checkpoints; do not restart solely because monitoring disconnects.
