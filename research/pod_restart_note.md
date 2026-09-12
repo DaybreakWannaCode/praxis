@@ -145,3 +145,14 @@ under production-h4-precision-001/sealed-scoring. The full independent outcome
 panel and exact replay are still pending. No interim scores/outcomes were used
 to change the frozen experiment. Do not interpret scoring completion as evidence
 of visual transfer or precision; final summary and integrity audit are required.
+
+## H4 parent panel complete; independent control running
+
+At 3:43:17 elapsed, process 30949 remained live with 519 response records and
+outcome-parent.json complete. No exit record exists. The first 512 records
+(256 probe and 256 parent responses) and parent outcome JSON were backed up
+locally under production-h4-precision-001/parent-completed. All JSON records
+parse and local SHA-256 hashes match the remote files/prefix. Independent null,
+four children and exact replay remain pending; preserve the original ten-hour
+cap and frozen protocol. This is a partial backup, not a resumable process
+checkpoint. Do not restart the evaluation solely because monitoring disconnects.
