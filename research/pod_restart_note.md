@@ -90,3 +90,37 @@ confirming the same warm parent on the replacement A100 (this does not assert
 cross-hardware rollout replay). The parity report is backed up locally under
 runs/production-gate-20260907/production-h4-002/step-1. Remaining steps and total
 displacement export are not yet verified.
+
+Candidate 2 subsequently finished all four parity checks and exported its total
+displacement: train_exit=0, complete=true, 2763.334451198578 seconds. All four
+step reports passed the state-chain validator; their elapsed times were
+413.235, 267.040, 261.661 and 281.125 seconds. Reports, completion record and
+export manifest are backed up locally. The queue is now verifying_candidate_2;
+verifier PID 16532 (timeout PID 16531) was confirmed live with 100 tensors checked.
+Do not treat the export as independently verified until export-verification.json
+reports success. Candidate 3 will start only after that check passes.
+
+Candidate 2 export verification then passed all 824 tensors (3,754,622,976
+elements, 254 FP64 tensors), norm 0.105477509245976. Its verification record is
+backed up locally. Queue advanced to training_candidate_3; trainer PID 16771
+and worker 21049 started the final frozen candidate. No visual run launched.
+The pending progress commit failed with a timeout appending .git/logs/HEAD;
+notes and private evidence files are saved, but do not assume that commit exists.
+
+## 2026-09-12 06:38 UTC: all H4 exports verified; visual check launched
+
+Candidate 3 completed all four updates and export in 3149.9742398262024 s,
+train_exit=0, complete=true. The original read-only verifier timed out after
+1800 s; a separate 3600 s verification retry passed with exit 0. No training
+was repeated. All 824 tensors / 3,754,622,976 elements passed checksums and
+finite/norm checks; 255 FP64 tensors, update norm 0.09178399884460932.
+Completion, combined parity, manifest and verification records are being
+backed up under the ignored local production-h4-003/completed directory.
+
+All four independent export checks now pass. The frozen visual evaluation
+was launched at 06:37:42 UTC in tmux session praxis-h4-precision on the existing
+A100 pod, using /workspace/run_h4_precision.sh. Output is
+/workspace/praxis/runs/production-h4-precision-001. Initial logs show model
+checkpoint loading; no outcome or completion is available yet. The 1800-response
+budget, ten-hour cap, frozen seeds/config/splits and no-final-test restriction
+remain unchanged. Check process, run.exit and result evidence before any restart.
