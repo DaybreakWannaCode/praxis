@@ -135,3 +135,13 @@ outcome summary exists yet. Startup was substantially slower than the earlier
 H1 run; retain the original ten-hour cap. Monitor the same process/session,
 without restarting from an observation timeout. Interim alignment values were
 not used to modify the protocol.
+
+## H4 scoring sealed; independent outcomes started
+
+At 2:53:45 elapsed, process 30949 was live with all 64 image-repeat projections,
+256 probe responses, scores.json saved, and seven additional outcome responses
+(263 total response lines). The completed scoring artifacts are backed up locally
+under production-h4-precision-001/sealed-scoring. The full independent outcome
+panel and exact replay are still pending. No interim scores/outcomes were used
+to change the frozen experiment. Do not interpret scoring completion as evidence
+of visual transfer or precision; final summary and integrity audit are required.
