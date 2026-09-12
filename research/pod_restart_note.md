@@ -82,3 +82,11 @@ the local ignored production-h4-001/completed directory. The queue advanced to
 training_candidate_2. The final visual launcher is saved as
 /workspace/run_h4_precision.sh (not launched); it requires all four independent
 export checks, uses the frozen manifest/config, and retains the ten-hour cap.
+
+Candidate 2 step 1 passed control/observer parity in 413.235 s: parameters,
+buffers, optimizer, scheduler and worker state all match. Its initial parameter,
+buffer, optimizer and scheduler digests also exactly match candidates 0 and 1,
+confirming the same warm parent on the replacement A100 (this does not assert
+cross-hardware rollout replay). The parity report is backed up locally under
+runs/production-gate-20260907/production-h4-002/step-1. Remaining steps and total
+displacement export are not yet verified.
