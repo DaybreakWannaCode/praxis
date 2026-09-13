@@ -1,5 +1,7 @@
 # Ordinary baseline execution — 2026-09-14
 
+Later observation: the same worker completed step 10 and remained live. The first eight post-startup steps have been backed up locally under `runs/ordinary-baseline-20260914/step-010-observation`. The analyzer correctly refuses to issue its combined throughput summary because no checkpoint-save event has completed yet. Earlier three-step observations below remain historical. Candidate preparation is complete with 32 distinct source indices verified disjoint from baseline train/validation and eligibility exclusions; its GPU run remains unlaunched.
+
 Status: running at the last live observation, September 13 at 18:59 UTC. This is a throughput run, not evidence of visual transfer. The full candidate pool and nine-run matrix have not been launched.
 
 ## Persistent run and recovery

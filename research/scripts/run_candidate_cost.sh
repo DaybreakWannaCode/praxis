@@ -51,6 +51,10 @@ for name,item in manifest.items():
     if sha(source/name)!=item['observed']: raise SystemExit('Instrumented source changed: '+name)
     if name in ('verl/utils/reward_score/mcq.py','verl/workers/actor/dp_actor.py') and item['original']!=item['observed']:
         raise SystemExit('Actor or reward implementation changed')
+extension=pathlib.Path('/workspace/praxis/Praxis-Extension-main/transfer_alignment')
+lock=json.loads(pathlib.Path('/workspace/praxis/research/candidate_cost_source_lock_20260914.json').read_text())
+for name,expected in lock.items():
+    if sha(extension/name)!=expected: raise SystemExit('Candidate/export implementation changed: '+name)
 print(json.dumps({'status':'passed','volume_capacity_gb':capacity,'used_bytes':used,'reserved_bytes':reserve}))
 PY
 
@@ -58,6 +62,7 @@ mkdir "$PRAXIS_CANDIDATE_COST_DIR"
 cp /workspace/praxis/data/candidate-cost-20260914/config.yaml "$PRAXIS_CANDIDATE_COST_DIR/config.yaml"
 cp /workspace/praxis-candidate-throughput/telemetry-source-manifest.json "$PRAXIS_CANDIDATE_COST_DIR/"
 cp /workspace/praxis/data/candidate-cost-20260914/audit.json "$PRAXIS_CANDIDATE_COST_DIR/data-audit.json"
+cp /workspace/praxis/research/candidate_cost_source_lock_20260914.json "$PRAXIS_CANDIDATE_COST_DIR/extension-source-lock.json"
 export PRAXIS_THROUGHPUT_EVENTS="$PRAXIS_CANDIDATE_COST_DIR/events.jsonl"
 export PRAXIS_THROUGHPUT_METRICS="$PRAXIS_CANDIDATE_COST_DIR/metrics.jsonl"
 python /workspace/praxis/research/scripts/launch_ordinary_baseline.py --directory "$PRAXIS_CANDIDATE_COST_DIR" --hours 2
