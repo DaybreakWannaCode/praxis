@@ -1,3 +1,7 @@
+## Completed; storage gate resolved
+
+The greedy job completed with exit 0, 32 responses and exact replay. Four artifact hashes and all response-level quantities were audited. See greedy_throughput_result_20260914.md. After the user updated storage, the live API verified 250 GB. The notes below describe earlier progress.
+
 # Greedy throughput execution — 2026-09-14
 
 The likelihood check is complete (choice_probe_result_20260914.md). The active goal still requires ordinary training throughput, checkpoint costs, fresh candidate-construction accounting, greedy evaluation timing and a complete matrix estimate. No full matrix has launched.

@@ -1,3 +1,7 @@
+## Current update
+
+Greedy timing is complete: see greedy_throughput_result_20260914.md. Storage is now verified at 250 GB, with about 120 GiB used. The storage expansion gate is resolved; ordinary training and fresh candidate construction are still required for the complete estimate. Earlier pending-storage notes below are historical.
+
 # Ordinary Praxis throughput measurement — 2026-09-14
 
 Goal: finish the archived-checkpoint likelihood check, measure sustained end-to-end throughput in the planned ordinary baseline, and estimate the complete candidate pool, nine training runs and final evaluations. Do not launch the full matrix before the estimate exists.
