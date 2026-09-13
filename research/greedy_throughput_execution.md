@@ -1,5 +1,7 @@
 ## Completed; storage gate resolved
 
+Follow-up prepared, not launched: the same module now accepts an explicit `--endpoint-model` plus `--endpoint-sha256` to time the ordinary baseline's step-32 checkpoint on the unchanged 32-image development panel. It verifies the checkpoint hash before loading and records hashing time separately within startup. The original source-config validation still fixes the panel and canonical parameter structure; the manifest records the actual endpoint model explicitly. Default invocation retains the archived-parent behavior. This check is for endpoint decoding speed and response-length sensitivity, not a broader baseline transfer result. Launch only after the baseline and the isolated candidate cost job have released their GPU processes; retain the existing replay, output and checksum gates.
+
 The greedy job completed with exit 0, 32 responses and exact replay. Four artifact hashes and all response-level quantities were audited. See greedy_throughput_result_20260914.md. After the user updated storage, the live API verified 250 GB. The notes below describe earlier progress.
 
 # Greedy throughput execution — 2026-09-14
