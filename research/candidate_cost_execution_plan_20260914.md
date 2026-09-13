@@ -1,6 +1,8 @@
 # One fresh candidate: cost measurement plan
 
-Implementation prepared; not launched. Ordinary baseline training must finish, release its GPU processes, and pass its checkpoint audit first. This is one candidate, not the 128-batch pool or a selection experiment.
+Implementation and persistent inputs prepared; not launched. Ordinary baseline training must finish, release its GPU processes, and pass its checkpoint audit first. This is one candidate, not the 128-batch pool or a selection experiment.
+
+Prepared on the pod: `/workspace/praxis/data/candidate-cost-20260914` and isolated source `/workspace/praxis-candidate-throughput`. Config SHA-256: `149615d99b8c1757d83339d4a3489b513ff0a43319f2a37225b71fe3371e0d8c`. Intended run directory: `/workspace/praxis/runs/candidate-cost-20260914-001`. Launcher: `research/scripts/run_candidate_cost.sh`, which refuses an incomplete baseline, occupied GPU, changed data/config/source or insufficient quota headroom. Preparation did not require or launch a model.
 
 Use the ordinary baseline's step-16 model and Adam/scheduler/worker-RNG state as the common warm parent. Keep the original pretrained reference policy. Select a new fixed 32-prompt batch from the same released source, excluding baseline training/validation indices and all exclusions from its eligibility audit. Preserve the released prompt text, including its choice-only suffix, so the timing regime matches this baseline. The broader scene audit remains outstanding.
 
