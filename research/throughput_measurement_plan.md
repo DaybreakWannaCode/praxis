@@ -37,6 +37,8 @@ For each estimate, show GPU-hours and elapsed wall-clock hours on one GPU; paral
 
 Engineering time: keep a separate ledger of code changes, dependency repair, data audit, source verification and manual analysis. It may overlap GPU execution and must not be added to GPU-hours. Historical untracked hands-on time is unknown, not zero. Forecast remaining engineering as a labeled planning allowance, not measured training throughput.
 
-## Current storage gate
+## Resolved storage gate
 
-API verifies a 150 GB standard network volume. du reports about 104 GiB for the project and 7.1 GiB for model files; other volume contents may add more. One existing full parent checkpoint occupies about 39 GiB. Two baseline checkpoints require about 78 GiB additional retention. A request to expand to 250 GB is pending; no baseline training starts under an insufficient disk budget and no old evidence is deleted to make it fit. Published standard storage is $0.07/GB/month, so 100 GB extra is about $7/month (https://docs.runpod.io/pods/storage/types, checked September 14).
+After the user's expansion, the API verified a 250 GB standard network volume. Observed usage was about 120 GiB. One existing full parent checkpoint occupies about 39 GiB; two baseline checkpoints require about 78 GiB additional retention. The baseline passed its capacity preflight and was launched. Fresh candidate export must receive a separate peak-storage check; do not assume there is room for a third full optimizer checkpoint. No old evidence was deleted to make room.
+
+See `ordinary_baseline_execution_20260914.md` for the live-run handoff and the discovered choice-only suffix in the released text prompts. The short-response timing regime is a material limitation on extrapolation to longer reasoning.
