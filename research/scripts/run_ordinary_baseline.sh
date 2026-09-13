@@ -16,7 +16,7 @@ export PRAXIS_THROUGHPUT_EVENTS="$run_dir/events.jsonl"
 export PRAXIS_THROUGHPUT_METRICS="$run_dir/metrics.jsonl"
 python -c 'import json,time,os; from pathlib import Path; Path(os.environ["PRAXIS_THROUGHPUT_EVENTS"]).write_text(json.dumps({"event":"start","phase":"launcher","wall_time":time.time()})+"\n")'
 set +e
-timeout --signal=TERM --kill-after=120s 12h python -m verl.trainer.main config="$run_dir/config.yaml" > "$run_dir/run.log" 2>&1
+python /workspace/praxis/research/scripts/launch_ordinary_baseline.py --directory "$run_dir" --hours 12
 result=$?
 printf '%s\n' "$result" > "$run_dir/run.exit"
 export PRAXIS_BASELINE_EXIT="$result"
