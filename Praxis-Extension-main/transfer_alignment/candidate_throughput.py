@@ -65,6 +65,13 @@ def optimizer_steps(optimizer):
             for state in optimizer.state.values() if 'step' in state]
 
 
+def canonical_items(state, mapping):
+    names={row['name'] for row in mapping['segments'] if not row['padding']}
+    if set(state) != names | set(mapping['aliases']):
+        raise ValueError('Checkpoint coverage differs from canonical parameters and aliases')
+    return {name:state[name] for name in sorted(names)}
+
+
 def install_checkpoint_manager(manager_class):
     if os.environ.get('PRAXIS_SINGLE_CANDIDATE_COST') != '1':
         raise RuntimeError('Candidate cost hooks need explicit opt-in')
@@ -87,6 +94,9 @@ def install_checkpoint_manager(manager_class):
         from torch.distributed.fsdp import (
             FullyShardedDataParallel as FSDP, ShardedStateDictConfig, StateDictType)
         from .production_displacement import save_displacement
+        from .production_coordinates import manifest, verify_values
+        from .production_parity import parameters
+        from types import SimpleNamespace
 
         if dist.get_world_size() != 1:
             raise ValueError('Only a one-rank cost benchmark is supported')
@@ -119,7 +129,20 @@ def install_checkpoint_manager(manager_class):
                        'model_world_size_1_rank_0.pt')
         parent = torch.load(parent_file, map_location='cpu', mmap=True, weights_only=False)
         parent_open_seconds = time.monotonic()-phase
-        # mmap page reads are charged to export, not the nearly free open above.
+        phase = time.monotonic()
+        worker=SimpleNamespace(fsdp_module=self.model, optimizer=self.optimizer)
+        mapping=manifest(worker)
+        validation=verify_values(parameters(worker), mapping, child)
+        for alias,primary in mapping['aliases'].items():
+            if (parent[alias].dtype != parent[primary].dtype
+                    or parent[alias].shape != parent[primary].shape
+                    or not torch.equal(parent[alias],parent[primary])):
+                raise ValueError('Tied parent checkpoint values differ')
+        parent=canonical_items(parent,mapping)
+        child=canonical_items(child,mapping)
+        save_json(root/'coordinates.json',mapping)
+        canonical_validation_seconds=time.monotonic()-phase
+        # mmap page reads are charged to validation/export, not the cheap open.
         phase = time.monotonic()
         report = save_displacement(parent, child, root/'delta', allow_float64=True)
         export_seconds = time.monotonic()-phase
@@ -129,6 +152,8 @@ def install_checkpoint_manager(manager_class):
             status='complete', parent_model=str(parent_file),
             materialize_seconds=materialize_seconds,
             parent_mmap_open_seconds=parent_open_seconds,
+            canonical_validation_seconds=canonical_validation_seconds,
+            canonical_validation=validation,
             lossless_export_seconds=export_seconds,
             total_seconds=time.monotonic()-started,
             export_bytes=sum(row['compressed_bytes'] for row in report['parameters']),
@@ -139,7 +164,8 @@ def install_checkpoint_manager(manager_class):
             maximum_optimizer_step_increment=max(changes),
             artifact='Lossless model-state displacement only; NOT a resumable checkpoint',
             limitations='One fresh candidate; no visual scoring or selection claim. '
-                        'Includes parent mmap page reads, precision checks and compression.'))
+                        'Includes parent mmap page reads, canonical/alias validation, '
+                        'precision checks and compression; tied aliases are not exported twice.'))
 
     manager_class.load_checkpoint = load
     manager_class.save_checkpoint = export

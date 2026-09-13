@@ -1,5 +1,7 @@
 {
-  "candidate_throughput.py": "d43c41c46294c9dcdfac901610680f2518685e7a861511d54b97f8e105b8652b",
+  "candidate_throughput.py": "5312e6d134765f2e1fb7ef9aebc523ef72f1773094f1e7de55d056416e133458",
   "production_displacement.py": "9e6845d9b838cdcf53b386a7a3238172189ce14d393ad1e3ef3c40aa0bf3c43a",
+  "production_coordinates.py": "afa1f3f2c2eb07f8728412b3e15290a0038283fb1208f86444f7ddbc85394454",
+  "production_parity.py": "4a731f4a2f44488749e609d1da22dacde92bb00f37946f5fedc62581fc3dd0de",
   "experiment.py": "2a64d2232e7a8503a3f54fa53602c79b9fc8c3a3c54f689341d32084d03cef54"
 }

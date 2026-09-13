@@ -7,7 +7,7 @@ from types import SimpleNamespace as NS
 import unittest
 from unittest.mock import patch
 from transfer_alignment.candidate_throughput import (
-    install_trainer, install_checkpoint_manager, optimizer_steps, validate_config)
+    canonical_items, install_trainer, install_checkpoint_manager, optimizer_steps, validate_config)
 
 
 class CandidateCostTests(unittest.TestCase):
@@ -41,6 +41,15 @@ class CandidateCostTests(unittest.TestCase):
     def test_step_inventory_does_not_invent_frozen_parameter_updates(self):
         optimizer=NS(state={'active':{'step':16},'frozen':{}})
         self.assertEqual(optimizer_steps(optimizer),[16])
+
+    def test_tied_alias_and_padding_are_not_double_counted(self):
+        mapping={'segments':[{'padding':False,'name':'embedding'}, {'padding':True}],
+                 'aliases':{'head':'embedding'}}
+        value=object()
+        self.assertEqual(canonical_items({'embedding':value,'head':value},mapping),{'embedding':value})
+        with self.assertRaises(ValueError):
+            canonical_items({'embedding':value,'head':value,'unknown':value},mapping)
+        with self.assertRaises(ValueError): canonical_items({'embedding':value},mapping)
 
     def test_restore_keeps_new_candidate_data_and_requires_one_batch(self):
         class Trainer: pass
