@@ -14,7 +14,7 @@ from .core import trainables
 
 
 class FullVisualBackend(QwenBackend):
-    def __init__(self, cfg, parent_model, coordinate_manifest):
+    def __init__(self, cfg, parent_model, coordinate_manifest, *, attn_implementation="flash_attention_2"):
         from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration
         from task_0.src.config import Cfg
         from task_0.src.gradient import PolicyGradientExtractor
@@ -25,7 +25,7 @@ class FullVisualBackend(QwenBackend):
         self.answer_parser=cfg["answer_parser"]
         self.parent_state=torch.load(parent_model,map_location="cpu",mmap=True,weights_only=False)
         self.model=Qwen2_5_VLForConditionalGeneration.from_pretrained(
-            cfg["model"],torch_dtype=torch.float32,attn_implementation="flash_attention_2",
+            cfg["model"],torch_dtype=torch.float32,attn_implementation=attn_implementation,
             local_files_only=True,trust_remote_code=False)
         expected={x["name"]:tuple(x["shape"]) for x in coordinate_manifest["segments"] if not x["padding"]}
         actual={n:tuple(p.shape) for n,p in self.model.named_parameters()}
