@@ -2,7 +2,7 @@
 
 Goal: finish the archived-checkpoint likelihood check, measure sustained end-to-end throughput in the planned ordinary baseline, and estimate the complete candidate pool, nine training runs and final evaluations. Do not launch the full matrix before the estimate exists.
 
-The previous goal turn made progress: it implemented and launched the likelihood check. This turn verified the same live PID and continued it without restarting. Two candidate outputs have subsequently been written; completion still requires all four and restoration replay.
+The previous goal turn made progress: it implemented and launched the likelihood check. This turn verified the same live PID and continued it without restarting. The likelihood run then completed with all four candidates, final restoration replay and a verified 12-file backup. Its measured result is in choice_probe_result_20260914.md; ordinary training and complete matrix costing remain pending.
 
 ## Measured inputs required
 
@@ -15,7 +15,7 @@ The previous goal turn made progress: it implemented and launched the likelihood
 
 ## Data preparation evidence
 
-The source file contains 10,000 rows. CPU preparation found 9,631 eligible distinct normalized situations after template, label, duplicate and exact visual-overlap checks, selected 1,024 for training and 32 disjoint text-validation situations by a fixed seeded hash, and wrote source/output hashes. This does not establish independence against paraphrases or unknown shared source scenes. Only problem/answer are fed to training; embedded source conversations or rationales are not used. Token-length filtering still needs to be checked before launch so coverage is not silently reduced.
+The source file contains 10,000 rows. CPU preparation found 9,631 eligible distinct normalized situations after template, label, duplicate and exact visual-overlap checks, selected 1,024 for training and 32 disjoint text-validation situations by a fixed seeded hash, and wrote source/output hashes. This does not establish independence against paraphrases or unknown shared source scenes. Only problem/answer are fed to training; embedded source conversations or rationales are not used. All 1,024 training prompts passed the actual processor length check: 254–412 tokens, mean 321.66, zero over the 2,048-token cap. All 32 text-validation prompts also passed. The config hash is recorded in prompt-preflight.json.
 
 The broader 256-scene visual development audit remains outstanding. Preserve the existing score/dev split and final test exclusion. No visual outcome tuning is permitted during throughput planning.
 

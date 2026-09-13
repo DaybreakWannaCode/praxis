@@ -1,3 +1,7 @@
+## Completed — supersedes progress notes below
+
+The second attempt completed with exit 0 and exact final parent restoration. All four candidates and 12 artifact hashes are backed up and verified. See choice_probe_result_20260914.md for measured costs and interpretation. GPU idle at the terminal check. Ordinary baseline remains unlaunched pending storage and final preflight gates.
+
 # Choice-probe execution ledger — 2026-09-14
 
 The H1/H4 study remains closed and inconclusive. New protocol: choice_probe_development_lock.md; future study: selection_redesign_20260914.md.
