@@ -18,7 +18,7 @@ class ChoiceProbeTests(unittest.TestCase):
         d = torch.tensor([.2, -.3, .1], dtype=torch.float64)
         eps = 1e-5
         actual = (normalized_target(x + eps*d, 1)-normalized_target(x-eps*d, 1))/(2*eps)
-        self.assertAlmostEqual(float(actual), float(g@d), places=9)
+        self.assertAlmostEqual(float(actual.detach()), float(g@d), places=9)
         self.assertGreater(float(g[1]), 0)
         self.assertAlmostEqual(float(g.sum()), 0, places=12)
 
