@@ -12,9 +12,20 @@ root=/workspace/praxis/runs/independent-baseline-endpoints-20260915
 exec 9>"$root/gpu.lock"
 flock -n 9 || exit 3
 python - <<'PY'
-import shutil,subprocess
+import os,subprocess
 if subprocess.check_output(['nvidia-smi','--query-compute-apps=pid','--format=csv,noheader'],text=True).strip():raise SystemExit('GPU occupied')
-if shutil.disk_usage('/workspace').free<16*1024**3:raise SystemExit('Persistent reserve below 16 GiB')
+# This mount reports the shared filesystem capacity, not the purchased quota.
+# Conservatively count allocated or logical bytes once per inode against 250 GB.
+seen=set();used=0
+for directory,_,files in os.walk('/workspace',followlinks=False):
+    for name in files:
+        path=os.path.join(directory,name)
+        if os.path.islink(path):continue
+        info=os.stat(path);key=(info.st_dev,info.st_ino)
+        if key in seen:continue
+        seen.add(key);used+=max(info.st_size,info.st_blocks*512)
+if 250_000_000_000-used<16*1024**3:raise SystemExit('Purchased-volume reserve below 16 GiB')
+print('Persistent accounted bytes:',used)
 PY
 # Fail rather than overwrite or silently restart a partial endpoint.
 test ! -e "$root/$endpoint"
