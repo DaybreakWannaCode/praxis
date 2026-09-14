@@ -15,3 +15,9 @@ Remaining before production use:
 5. Establish and hash-verify a real archival destination before removing any historical checkpoint. Neither the adapter nor its tests creates that destination or reduces existing history.
 
 No new training, checkpoint deletion, pod changes or final-test access occurred in this stage. Full selection remains unlaunched.
+
+## Read-only interrupted-publication inspection
+
+Added `checkpoint_recovery.py` for newly owned checkpoint stores. It takes a shared nonblocking lock, verifies the publication pointer, ownership, full file coverage, byte counts and SHA-256 hashes, and compares the compatibility tracker. A missing/lagging tracker yields `tracker_reconciliation_required` with automatic resume disabled; an ahead tracker or corrupt file is rejected. It does not modify pointers, choose an unpointed orphan, delete files, or assert actual worker resumability. Reconciliation remains explicit rather than silently trusting the highest directory name.
+
+Sixteen tests passed across recovery inspection, publication ordering and the adapter. New recovery cases cover same-size corruption, an interrupted tracker update retaining both complete copies, active-writer refusal, unexpected files and an ahead tracker. This is local filesystem validation; full-size original-worker publication remains untested. The separately completed real-worker restore-only audit verifies loaded values for an existing checkpoint, not this new publication path.
