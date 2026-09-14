@@ -31,3 +31,11 @@ A separate two-minute-capped check on the A100 used the unmodified original `Bas
 Local backup: `runs/rng-restore-validation-20260915/result.json`. Its executed-script SHA was verified locally: `2d9e8fa08404d99e47ebed101799dc803ec1276233a7ccd992e76a79e8bc14b8`. Original manager SHA: `c9da37082806e122860c2804f38f95e29a30116749137cd7977e36965638a6dd`. Saved extra-state SHA: `7fbafaef84df2f9a2d76e42adbecf5ccfd0a76eaec3041a75260c10e38c5533c`. Environment: Torch 2.5.1+cu124, CUDA 12.4, A100-SXM4-80GB.
 
 This closes the isolated CUDA RNG compatibility/restoration check previously listed as untested. Actual FSDP model/optimizer restore, dataloader continuation and subsequent rollout replay remain separate requirements. No new model/checkpoint or scientific training was produced.
+
+## Original dataloader continuation passed
+
+The actual original trainer `_create_dataloader` method was called with the baseline config, pinned local tokenizer/processor and audited original training Parquet. An uninterrupted CPU pass produced 32 batch digests. A separately constructed loader restored from the saved step-16 dataloader state produced exactly the last 16 uninterrupted digests, covering tensor bytes and non-tensor metadata. The first 16 batches differed, confirming this was continuation rather than an accidental fresh start. The audit completed in 3.215 internal seconds; imports/SSH startup are excluded. No model was loaded or trained and no visual test data was used.
+
+Local report: `runs/dataloader-restore-validation-20260915/result.json`. Its 16 continuation digests and executed-script hash were verified locally. Script SHA: `58b93f704c10211d90944283745a65af05e0cc3fe9530e77dcd74b50a3c4ff95`; saved dataloader state SHA: `c135e937f68c8f9b70cf4866ae8b755a70c71fbcb18677aead9f677331d4541f`; training input SHA: `8ff1442fe4653ef9070adad636c549bfa10c9da16085c0becd4f59464452aee4`.
+
+The isolated dataloader and RNG continuation checks now pass. Full FSDP model/optimizer loading and subsequent update/rollout replay remain unverified as an integrated continuation. Safe save publication still needs actual trainer integration and enough capacity for its two-checkpoint transaction. These results do not authorize historical deletion or the full scientific sweep.
