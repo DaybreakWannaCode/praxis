@@ -33,6 +33,7 @@ class CheckpointStore:
         if create:
             self.root.mkdir(parents=True,exist_ok=False)
             atomic_json(self.root/'owner.json',dict(version=1,owner=uuid.uuid4().hex))
+            sync_directory(self.root.parent)
         if self.root.is_symlink():raise ValueError('Checkpoint root cannot be a symlink')
         owner=json.loads((self.root/'owner.json').read_text())
         if owner['version']!=1:raise ValueError('Unknown store version')
@@ -64,6 +65,8 @@ class CheckpointStore:
                         os.fsync(stream.fileno())
                     files[str(path.relative_to(pending))]=dict(bytes=path.stat().st_size,sha256=h.hexdigest())
             if not files:raise ValueError('Empty checkpoint')
+            for directory in sorted((p for p in pending.rglob('*') if p.is_dir()),key=lambda p:len(p.parts),reverse=True):
+                sync_directory(directory)
             receipt=dict(owner=self.owner,step=step,validation=validation,files=files)
             atomic_json(pending/'publication.json',receipt)
             os.replace(pending,destination)

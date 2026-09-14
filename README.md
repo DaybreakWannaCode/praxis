@@ -8,6 +8,11 @@ and an **actual** text optimizer displacement. Cosine and norms are diagnostics.
 
 ## Current status
 
+September 15: [compact candidate scoring passed](research/compact_choice_result_20260915.md).
+The [storage strategy](research/storage_strategy_20260915.md) targets a bounded working set
+instead of retaining every candidate update. The 250 GB option requires verified archival;
+full lifecycle/trainer integration remains pending. No historical artifacts were deleted.
+
 September 14: the bounded likelihood and execution-cost checks are complete. A
 single-A100, full-parameter, adapted original-Praxis baseline finished 32 updates;
 its step-16/32 model and optimizer checkpoints passed integrity checks. One fresh
