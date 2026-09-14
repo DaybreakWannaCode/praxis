@@ -6,10 +6,12 @@ export PYTHONPATH=/workspace/praxis-input-capture-code/Praxis-Extension-main:/wo
 export PYTHONNOUSERSITE=1 PYTHONUNBUFFERED=1 OMP_NUM_THREADS=4
 export HF_HOME=/workspace/cache/huggingface HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
 export CUBLAS_WORKSPACE_CONFIG=:4096:8
-run=/workspace/praxis/runs/candidate-input-capture-20260915-001
+run=${PRAXIS_CAPTURE_RUN:-/workspace/praxis/runs/candidate-input-capture-20260915-001}
+export PRAXIS_CAPTURE_RUN="$run"
 python - <<'PY'
-import hashlib,json,pathlib,subprocess
-root=pathlib.Path('/workspace/praxis/runs/candidate-input-capture-20260915-001')
+import hashlib,json,os,pathlib,subprocess
+root=pathlib.Path(os.environ['PRAXIS_CAPTURE_RUN']).resolve()
+if root.parent!=pathlib.Path('/workspace/praxis/runs') or root.name not in {'candidate-input-capture-20260915-001','candidate-input-capture-20260915-002'}:raise SystemExit('Unregistered capture run')
 run=json.loads((root/'launcher.json').read_text())
 if run['status']!='complete' or run['exit']!=0 or run['tagged_processes_remaining']:raise SystemExit('Candidate not complete')
 if (root/'run.exit').read_text().strip()!='0':raise SystemExit('Failed candidate exit')
