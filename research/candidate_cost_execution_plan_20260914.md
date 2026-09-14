@@ -2,7 +2,7 @@
 
 The single candidate cost run has been launched after the baseline completed, released its GPU processes, and passed the checkpoint audit. This is one candidate, not the 128-batch pool or a selection experiment. Subsequent launch requirements below document the guards that passed.
 
-Live launch record: tmux `praxis-candidate-cost`, worker PID 55088 observed initializing, supervisor owner `a171a2de236d4e789fd2497864fb7ba5`, two-hour cap. Output `/workspace/praxis/runs/candidate-cost-20260914-001`; launch timestamp 1789349077.4425857. Preflight found 210,493,066,752 bytes used and reserved a conservative 37,895,799,740 bytes within the verified 250 GB quota. No candidate result or timing is complete yet.
+Live launch record: tmux `praxis-candidate-cost`, worker PID 55088 observed initializing, supervisor owner `a171a2de236d4e789fd2497864fb7ba5`, two-hour cap. Output `/workspace/praxis/runs/candidate-cost-20260914-001`; launch timestamp 1789349077.4425857. Preflight found 210,493,066,752 bytes used and reserved a conservative 37,895,799,740 bytes within the verified 250 GB quota. The run subsequently completed with exit 0; see candidate_cost_result_20260914.md for the measured component ledger and export checks.
 
 The baseline finished at timestamp 1789332776.3387136. The gap before this candidate launch is 16,301.104 s (4.528 hours); only 849.938 s is currently attributed to the checkpoint audit. The remaining gap is unclassified elapsed time, not measured training or measured hands-on engineering. If the pod was billed continuously, that gap also incurs compute rental charges; historical billing has not been audited. Keep it visible in the eventual execution ledger rather than folding it into per-step throughput.
 
