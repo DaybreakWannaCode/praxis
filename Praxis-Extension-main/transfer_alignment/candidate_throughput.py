@@ -105,7 +105,7 @@ def install_checkpoint_manager(manager_class):
         self._cost_exported = True
         root = Path(path)
         root_resolved = root.resolve()
-        allowed = Path(os.environ['PRAXIS_CANDIDATE_COST_DIR']).resolve()
+        allowed = Path(os.environ.get('PRAXIS_CANDIDATE_EXPORT_ROOT',os.environ['PRAXIS_CANDIDATE_COST_DIR'])).resolve()
         if allowed not in root_resolved.parents:
             raise ValueError('Export is outside the private cost run directory')
         root.mkdir(parents=True, exist_ok=False)
@@ -144,7 +144,9 @@ def install_checkpoint_manager(manager_class):
         canonical_validation_seconds=time.monotonic()-phase
         # mmap page reads are charged to validation/export, not the cheap open.
         phase = time.monotonic()
-        report = save_displacement(parent, child, root/'delta', allow_float64=True)
+        limit=os.environ.get('PRAXIS_CANDIDATE_EXPORT_MAX_BYTES')
+        report = save_displacement(parent, child, root/'delta', allow_float64=True,
+                                   max_output_bytes=int(limit) if limit else None)
         export_seconds = time.monotonic()-phase
         if report['update_norm'] <= 0:
             raise ValueError('Zero update is not a useful candidate cost check')
@@ -166,6 +168,14 @@ def install_checkpoint_manager(manager_class):
             limitations='One fresh candidate; no visual scoring or selection claim. '
                         'Includes parent mmap page reads, canonical/alias validation, '
                         'precision checks and compression; tied aliases are not exported twice.'))
+
+        durable=Path(os.environ['PRAXIS_CANDIDATE_COST_DIR']).resolve()
+        if allowed!=durable:
+            receipt=durable/'export-receipt'
+            receipt.mkdir(exist_ok=False)
+            for source,name in [(root/'cost.json','cost.json'),(root/'coordinates.json','coordinates.json'),
+                                (root/'delta/manifest.json','delta-manifest.json')]:
+                save_json(receipt/name,json.loads(source.read_text()))
 
     manager_class.load_checkpoint = load
     manager_class.save_checkpoint = export

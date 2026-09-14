@@ -1,5 +1,6 @@
 """Lossless, chunked FP32 canonical displacements for bounded production runs."""
 import gzip
+from contextlib import contextmanager
 import hashlib
 import sys
 import zlib
@@ -10,9 +11,34 @@ import torch
 from .experiment import write_json
 
 
-def save_displacement(before, after, output, *, resume_from=None, allow_float64=False):
+class ExportBudgetExceeded(OSError):
+    pass
+
+
+@contextmanager
+def bounded_gzip(path, budget):
+    class LimitedWriter:
+        def __init__(self, stream): self.stream=stream
+        def write(self, value):
+            if budget['used']+len(value)>budget['limit']:
+                raise ExportBudgetExceeded('Compressed displacement exceeds its byte budget')
+            count=self.stream.write(value)
+            budget['used']+=count
+            return count
+        def __getattr__(self, name): return getattr(self.stream,name)
+    with path.open('wb') as raw:
+        with gzip.GzipFile(filename='',mode='wb',fileobj=LimitedWriter(raw),compresslevel=1,mtime=0) as stream:
+            yield stream
+
+
+def save_displacement(before, after, output, *, resume_from=None, allow_float64=False, max_output_bytes=None):
     if sys.byteorder!="little":raise ValueError("Little-endian host required")
     if set(before)!=set(after):raise ValueError("Displacement coordinate keys differ")
+    if max_output_bytes is not None and (type(max_output_bytes) is not int or max_output_bytes<=0):
+        raise ValueError('Positive integer output budget required')
+    if max_output_bytes is not None and resume_from is not None:
+        raise ValueError('Bounded export cannot reuse external files')
+    budget={'limit':max_output_bytes,'used':0}
     root=Path(output)
     root.mkdir(parents=True,exist_ok=False)
     rows=[]
@@ -71,7 +97,7 @@ def save_displacement(before, after, output, *, resume_from=None, allow_float64=
                 # directory. Only this new export gets a freshly written copy.
                 sha=hashlib.sha256()
         if reused is None:
-            with gzip.open(root/filename,"wb",compresslevel=1) as dest:
+            with (gzip.open(root/filename,"wb",compresslevel=1) if max_output_bytes is None else bounded_gzip(root/filename,budget)) as dest:
                 for delta in chunks():
                     raw=memoryview(delta.contiguous().numpy())
                     sha.update(raw)
