@@ -56,3 +56,9 @@ The distinct second batch finished with exit 0 in 1,607.24 seconds (26.79 minute
 The second export contains 824 canonical tensors and 6,575,536,693 compressed bytes under the 12 GB cap. Update norm is 0.01641572724451903. Export and associated validation took 676.02 seconds. This variation relative to the first candidate must be included in future runtime budgets; do not extrapolate only the faster trial. Byte-exact persistent metadata copies were verified through the same audit mechanism.
 
 Scoring was launched in tmux `praxis-input-capture-score-002` after the audit passed. Calibration scoring, independent score-backup audit and second scratch release are pending. There are still no independent visual-transfer results from these integration checks.
+
+## Completed second score-and-release lifecycle
+
+The second scorer exited 0 in 839.27 seconds, verified all 824 displacement tensors and exact parent-forward replay. Alignment was -0.03503486836605385; direct same-panel likelihood change was -0.03507749206367006. The independent local score audit passed and was persisted before guarded cleanup. These are calibration results, not independent visual correctness.
+
+Cleanup removed 6,575,993,835 logical temporary bytes. Fresh verification confirmed scratch absence, retained input checksum, 17,158,973 bytes of durable run evidence and 23,314,268,160 free container bytes. The cleanup journal is backed up locally. Two complete candidate lifecycles now demonstrate bounded temporary retention; exact optimizer replay and full checkpoint publication integration remain unvalidated. Historical artifacts are untouched.

@@ -14,7 +14,7 @@ from .core import trainables
 
 
 class FullVisualBackend(QwenBackend):
-    def __init__(self, cfg, parent_model, coordinate_manifest, *, attn_implementation="flash_attention_2"):
+    def __init__(self, cfg, parent_model, coordinate_manifest, *, attn_implementation="flash_attention_2", pretrained_initial=False):
         from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration
         from task_0.src.config import Cfg
         from task_0.src.gradient import PolicyGradientExtractor
@@ -23,17 +23,21 @@ class FullVisualBackend(QwenBackend):
         if cfg["answer_parser"] not in ("explicit_final_v2","explicit_final_v3"):
             raise ValueError("Visual parser contract differs")
         self.answer_parser=cfg["answer_parser"]
-        self.parent_state=torch.load(parent_model,map_location="cpu",mmap=True,weights_only=False)
+        if pretrained_initial != (parent_model is None):
+            raise ValueError('Pretrained initialization requires explicit mode and no trained parent file')
+        self.parent_state=None if pretrained_initial else torch.load(parent_model,map_location="cpu",mmap=True,weights_only=False)
         self.model=Qwen2_5_VLForConditionalGeneration.from_pretrained(
             cfg["model"],torch_dtype=torch.float32,attn_implementation=attn_implementation,
             local_files_only=True,trust_remote_code=False)
         expected={x["name"]:tuple(x["shape"]) for x in coordinate_manifest["segments"] if not x["padding"]}
         actual={n:tuple(p.shape) for n,p in self.model.named_parameters()}
         if actual!=expected:raise ValueError("Visual model and Praxis canonical coordinates differ")
+        alias_state=self.model.state_dict() if pretrained_initial else self.parent_state
         for alias,primary in coordinate_manifest["aliases"].items():
-            if not torch.equal(self.parent_state[alias],self.parent_state[primary]):
+            if not torch.equal(alias_state[alias],alias_state[primary]):
                 raise ValueError("Tied parent values differ")
-        self.model.load_state_dict(self.parent_state,strict=True)
+        del alias_state
+        if not pretrained_initial:self.model.load_state_dict(self.parent_state,strict=True)
         self.model.to("cuda")
         enable_gradient_checkpointing(self.model)
         self.model.train()
@@ -53,7 +57,9 @@ class FullVisualBackend(QwenBackend):
                               "system_prompt":cfg["system_prompt"]},"sampling":{"gen_batch":1}})
         self.extractor=Extractor(self.model,proc,SimpleNamespace(params=list(trainables(self.model).values())),ex_cfg,device="cuda")
         self.metadata={"backend":"full_parameter_visual_hf_bf16_autocast","torch":torch.__version__,
-                       "parent_model":str(parent_model),"canonical_numel":sum(p.numel() for p in self.model.parameters()),
+                       "parent_model":None if pretrained_initial else str(parent_model),
+                       "initialization":"pinned_pretrained" if pretrained_initial else "checkpoint",
+                       "canonical_numel":sum(p.numel() for p in self.model.parameters()),
                        "config":cfg,"text_optimizer":"none; updates come from original Praxis"}
 
     def sample(self,*args,**kwargs):
@@ -68,6 +74,8 @@ class FullVisualBackend(QwenBackend):
             return self.extractor.sequence_logprob(seq,plen,vis)[0]
 
     def restore_parent(self):
+        if self.parent_state is None:
+            raise RuntimeError('Pretrained endpoint mode has no retained parent; reload it instead of applying updates')
         self.model.zero_grad(set_to_none=True)
         with torch.no_grad():
             for n,p in self.model.named_parameters():p.copy_(self.parent_state[n])
