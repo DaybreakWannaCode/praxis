@@ -48,3 +48,11 @@ The local backup audit checked parent/export identities, panel rows, direct mean
 Guarded release completed, removing 6,601,870,709 logical scratch bytes (compressed updates plus metadata). A fresh check confirmed scratch absence, retained input checksum, 17,161,090 bytes of persistent run evidence and 23,322,218,496 bytes of free container disk. The cleanup journal was backed up locally. Historical /workspace archives were untouched. Input capture is not a proof of exact future optimizer replay; regeneration can still require remeasurement.
 
 The second guarded candidate launcher was started in tmux `praxis-input-capture-002` after this release. Its completion and second score/release cycle remain pending. The full matrix is not launched.
+
+## Second candidate construction passed
+
+The distinct second batch finished with exit 0 in 1,607.24 seconds (26.79 minutes), leaving no tagged worker processes. Capture saved 15,999,824 bytes in 0.955 seconds and passed unchanged-state and serialization checks. Its CPU audit reloaded all 160 rows and checked digests, finite floating inputs, the 37 populated optimizer counters advancing 16 to 17, and export identities.
+
+The second export contains 824 canonical tensors and 6,575,536,693 compressed bytes under the 12 GB cap. Update norm is 0.01641572724451903. Export and associated validation took 676.02 seconds. This variation relative to the first candidate must be included in future runtime budgets; do not extrapolate only the faster trial. Byte-exact persistent metadata copies were verified through the same audit mechanism.
+
+Scoring was launched in tmux `praxis-input-capture-score-002` after the audit passed. Calibration scoring, independent score-backup audit and second scratch release are pending. There are still no independent visual-transfer results from these integration checks.
