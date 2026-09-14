@@ -18,6 +18,7 @@ training=json.loads((root/'plan.json').read_text())
 sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
 for name,h in training['files'].items():
  if sha(pathlib.Path(name))!=h:raise SystemExit('Frozen training/source input changed: '+name)
+if json.loads((root/'capture-audit.json').read_text())['status']!='passed':raise SystemExit('Capture audit required')
 capture=json.loads((root/'inputs/capture.json').read_text())
 if capture['status']!='updated' or capture['input_file_sha256']!=sha(root/'inputs/fixed-update-input.pt'):raise SystemExit('Input capture failed')
 base=pathlib.Path('/workspace/praxis')
@@ -26,7 +27,7 @@ audit=json.loads(audit_path.read_text())
 if capture['parent_receipt_sha256']!=sha(audit_path):raise SystemExit('Captured parent audit changed')
 actor=pathlib.Path(training['scratch'])/'exports/global_step_1/actor'
 for relative,copy in [('cost.json','cost.json'),('coordinates.json','coordinates.json'),('delta/manifest.json','delta-manifest.json')]:
- if sha(actor/relative)!=sha(root/'export-receipt'/copy):raise SystemExit('Export receipt changed')
+ if sha(actor/relative)!=sha(root/'export-receipt/byte-exact'/copy):raise SystemExit('Export receipt changed')
 parent=base/'runs/ordinary-baseline-20260914/checkpoints/global_step_16/actor/model_world_size_1_rank_0.pt'
 config=base/'runs/production-h4-preparation/visual-config.json';manifest=base/'data/production-precision/visual-manifest.json'
 files=[config,manifest,actor/'cost.json',actor/'coordinates.json',actor/'delta/manifest.json']

@@ -7,7 +7,7 @@ from types import SimpleNamespace as NS
 import unittest
 from unittest.mock import patch
 from transfer_alignment.candidate_throughput import (
-    canonical_items, install_trainer, install_checkpoint_manager, optimizer_steps, validate_config)
+    copy_receipt, canonical_items, install_trainer, install_checkpoint_manager, optimizer_steps, validate_config)
 
 
 class CandidateCostTests(unittest.TestCase):
@@ -15,6 +15,16 @@ class CandidateCostTests(unittest.TestCase):
         return NS(trainer=NS(max_steps=1,total_episodes=1,load_checkpoint_path='/parent'),
                   data=NS(rollout_batch_size=32),
                   worker=NS(rollout=NS(n=5),actor=NS(global_batch_size=32,ppo_epochs=1)))
+
+    def test_receipt_copy_preserves_real_manifest_serialization(self):
+        from transfer_alignment.experiment import write_json
+        with tempfile.TemporaryDirectory() as d:
+            source=Path(d)/'manifest.json';dest=Path(d)/'copy.json'
+            write_json(source,{'canonical_numel':49,'child_reconstruction_exact':True})
+            copy_receipt(source,dest)
+            self.assertEqual(source.read_bytes(),dest.read_bytes())
+            self.assertTrue(dest.read_bytes().endswith(b'\n'))
+            with self.assertRaises(FileExistsError):copy_receipt(source,dest)
 
     def test_rejects_multi_update_budget(self):
         cfg=self.config()

@@ -76,10 +76,10 @@ def release(persistent, *, temporary_base, no_live_workers):
         if any(p.is_symlink() for p in scratch.rglob('*')):raise ValueError('Scratch contains symlinks')
         actor=scratch/'exports/global_step_1/actor'
         for rel,name in [('cost.json','cost.json'),('coordinates.json','coordinates.json'),('delta/manifest.json','delta-manifest.json')]:
-            if sha(actor/rel)!=sha(persistent/'export-receipt'/name):raise ValueError('Persistent export receipt differs')
+            if sha(actor/rel)!=sha(persistent/'export-receipt/byte-exact'/name):raise ValueError('Persistent export receipt differs')
         cost=json.loads((actor/'cost.json').read_text())
         if score_manifest['plan']['parent_model']!=cost['parent_model']:raise ValueError('Scoring parent differs')
-        if score_manifest['plan']['artifact_sha256'][str(actor/'delta/manifest.json')]!=sha(persistent/'export-receipt/delta-manifest.json'):
+        if score_manifest['plan']['artifact_sha256'][str(actor/'delta/manifest.json')]!=sha(persistent/'export-receipt/byte-exact/delta-manifest.json'):
             raise ValueError('Scored delta identity differs')
         if cost['optimizer_state_entries']!=len(before) or cost['incremented_entries']!=sum(v==1 for v in changes) or cost['maximum_optimizer_step_increment']!=1:
             raise ValueError('Export and capture optimizer counters differ')

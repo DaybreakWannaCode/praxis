@@ -24,7 +24,7 @@ class CleanupTests(unittest.TestCase):
             before_steps=[16],after_steps=[17],parent_receipt_sha256='a'*64,input_file_sha256=sha(self.run/'inputs/fixed-update-input.pt')))
         cost=dict(status='complete',child_reconstruction_exact=True,parent_model='/parent/model.pt',optimizer_state_entries=1,incremented_entries=1,maximum_optimizer_step_increment=1)
         for rel,name,value in [('cost.json','cost.json',cost),('coordinates.json','coordinates.json',{}),('delta/manifest.json','delta-manifest.json',{'fixture':True})]:
-            put(self.actor/rel,value);put(self.run/'export-receipt'/name,value)
+            put(self.actor/rel,value);put(self.run/'export-receipt/byte-exact'/name,value)
         put(self.run/'scoring/summary.json',dict(status='complete',parent_replay_exact=True,validated_tensors=824,alignment=.1,direct_lookahead=.09))
         put(self.run/'scoring/local-audit.json',dict(status='passed'))
         put(self.run/'scoring/manifest.json',dict(status='complete',plan=dict(candidate_dir=str(self.actor),parent_model='/parent/model.pt',

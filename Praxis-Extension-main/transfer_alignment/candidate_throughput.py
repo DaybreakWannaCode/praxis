@@ -21,6 +21,18 @@ def save_json(path, value):
     os.replace(temporary, path)
 
 
+def copy_receipt(source, destination):
+    """Preserve exact serialized bytes, including the producer's final newline."""
+    import shutil
+    destination=Path(destination)
+    if destination.exists():raise FileExistsError(destination)
+    temporary=destination.with_suffix(destination.suffix+'.pending')
+    with Path(source).open('rb') as incoming, temporary.open('xb') as outgoing:
+        shutil.copyfileobj(incoming,outgoing,length=1024*1024)
+        outgoing.flush();os.fsync(outgoing.fileno())
+    os.replace(temporary,destination)
+
+
 def validate_config(config):
     """Reject broader training or missing parent before any candidate work."""
     if config.trainer.max_steps != 1 or config.trainer.total_episodes != 1:
@@ -175,7 +187,7 @@ def install_checkpoint_manager(manager_class):
             receipt.mkdir(exist_ok=False)
             for source,name in [(root/'cost.json','cost.json'),(root/'coordinates.json','coordinates.json'),
                                 (root/'delta/manifest.json','delta-manifest.json')]:
-                save_json(receipt/name,json.loads(source.read_text()))
+                copy_receipt(source,receipt/name)
 
     manager_class.load_checkpoint = load
     manager_class.save_checkpoint = export
