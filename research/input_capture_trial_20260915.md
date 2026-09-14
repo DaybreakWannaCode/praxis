@@ -38,3 +38,13 @@ A second 32-prompt batch is frozen under `data/candidate-input-capture-20260915-
 `run_second_capture.sh` requires the first candidate's completed cleanup journal and absent scratch, then repeats free-GPU, frozen-file and storage-reserve checks. It registers scratch ownership at creation. It retains the same isolated source snapshot and the same audited step-16 parent. Preparation does not launch training.
 
 The cleanup helper now binds its decision to the hashes of independently audited score files, rejecting post-audit changes. Ten tests passed. The live controller additionally requires successful scoring exit, verified local input-backup identities, no tagged trainer workers, no live compact scorer, and an idle GPU. These guards do not replace the outstanding actual score-and-release test.
+
+## Completed first score-and-release lifecycle
+
+Scoring exited 0 after 714.74 seconds, verified all 824 raw displacement tensors, and passed exact parent-forward replay. Alignment was -0.0371968143378855; direct normalized-label log-likelihood change on the same 16-image calibration panel was -0.03729368259897914. This close local agreement validates implementation behavior for this candidate; it is not independent visual correctness or transfer evidence. The likelihood direction is negative for this update. No new model or gradient files were written.
+
+The local backup audit checked parent/export identities, panel rows, direct mean change, alignment/cosine/norm consistency, canonical coverage and child digests. Its score-file hashes were copied back to persistent storage and checked before deletion. The cleanup controller initially refused because the unrelated Nginx service denied environment inspection. The controller now excludes unreadable processes only when their real/effective/saved UIDs all differ from the workload UID; unreadable same-owner processes still block cleanup. No experiment process was killed by cleanup.
+
+Guarded release completed, removing 6,601,870,709 logical scratch bytes (compressed updates plus metadata). A fresh check confirmed scratch absence, retained input checksum, 17,161,090 bytes of persistent run evidence and 23,322,218,496 bytes of free container disk. The cleanup journal was backed up locally. Historical /workspace archives were untouched. Input capture is not a proof of exact future optimizer replay; regeneration can still require remeasurement.
+
+The second guarded candidate launcher was started in tmux `praxis-input-capture-002` after this release. Its completion and second score/release cycle remain pending. The full matrix is not launched.

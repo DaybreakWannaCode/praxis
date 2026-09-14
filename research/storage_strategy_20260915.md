@@ -49,3 +49,7 @@ Next gate: validate replay-input capture in the original candidate worker and de
 ## Archive access check
 
 An unattended read-only SSH probe to BruinML on September 15 failed authentication. Its current free capacity and archive access are therefore unverified. No archival destination has been written and no old source files have been removed. The 232 GB proposal remains conditional on resolving archival access and verifying copies before source cleanup.
+
+## Measured first integrated lifecycle
+
+The September 15 original-worker capture trial now passed construction, calibration scoring, independent local score-backup audit and guarded scratch release. The 6,601,413,568-byte compressed update was temporary; the entire retained run measured 17,161,090 bytes after cleanup. No historical files were removed. This demonstrates bounded retention for one actual candidate, not the full 250 GB envelope, exact future replay, or a measured full-study peak. A second distinct candidate is launched to test repetition. The original archive-capacity requirement for historical and full recovery checkpoints remains unresolved.

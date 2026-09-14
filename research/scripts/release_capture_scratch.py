@@ -1,6 +1,7 @@
 """Release one registered candidate scratch only after scoring and backup audits."""
 import argparse
 import json
+import os
 from pathlib import Path
 import subprocess
 
@@ -41,8 +42,17 @@ def main():
             except psutil.NoSuchProcess:
                 continue
             except psutil.AccessDenied:
-                # Liveness could not be established; do not authorize deletion.
-                return False
+                # This workload launches under this UID without setuid/sudo.
+                # Service-account processes (e.g. nginx) cannot be its workers.
+                # Still fail closed if ownership cannot be read or matches us.
+                try:
+                    ids = process.uids()
+                    if os.geteuid() in (ids.real, ids.effective, ids.saved):
+                        return False
+                except psutil.NoSuchProcess:
+                    continue
+                except psutil.AccessDenied:
+                    return False
         return True
 
     print(json.dumps(release(root, temporary_base='/tmp', no_live_workers=no_live_workers), indent=2))
