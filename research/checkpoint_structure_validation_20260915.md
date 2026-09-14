@@ -9,3 +9,11 @@ Fifteen local tests passed across checkpoint publication, adapter and validator.
 A bounded read-only real-checkpoint audit was launched in tmux session `praxis-checkpoint-validation`, timeout 600 seconds, under `/workspace/praxis-checkpoint-validation-20260915`. It captures the step-16 layout and validates step-32 against it; source checkpoints are never modified or copied. Only schema/report files are written. The latest live check confirmed Python PID 76933 running. This document does not claim a completed real audit until a terminal result is recorded below.
 
 A structural pass cannot prove CUDA RNG compatibility, actual FSDP optimizer loading, dataloader restoration or subsequent rollout replay. The publication adapter is not yet connected to this validator in a production launcher; real worker save/resume and archive capacity remain required before bounded-retention training. Do not delete historical checkpoints based on this audit.
+
+## Save-time quota guard
+
+Added `checkpoint_quota.py`, a preflight callback compatible with the save adapter. It counts each inode once using the larger of logical size and allocated blocks, includes directory allocation, refuses inaccessible/special files rather than silently undercounting, and requires room for the entire replacement plus an explicit reserve while existing checkpoints are still present. It checks that the checkpoint store is within the accounted volume. It does not mistake shared-filesystem free space for the purchased quota and does not reserve space against unrelated concurrent writers.
+
+Four filesystem tests passed: sparse-file accounting, hard-link deduplication, the exact replacement-plus-reserve boundary, and refusal of an out-of-volume store. This guard does not establish a safe production replacement bound; that must be chosen from measured complete checkpoint sizes with headroom before a launch.
+
+Local archive check during this stage found approximately 17.26 GB free on the Mac, with no external volume mounted. That is insufficient for one roughly 41.27 GB full recovery checkpoint. No large archive transfer or deletion was attempted. The running read-only structural audit was rechecked at 3 minutes 21 seconds (Python PID 76933 still live); its ten-minute cap remains unchanged. No duplicate audit was launched.
