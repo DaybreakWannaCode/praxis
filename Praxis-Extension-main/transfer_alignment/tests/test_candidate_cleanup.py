@@ -26,9 +26,11 @@ class CleanupTests(unittest.TestCase):
         for rel,name,value in [('cost.json','cost.json',cost),('coordinates.json','coordinates.json',{}),('delta/manifest.json','delta-manifest.json',{'fixture':True})]:
             put(self.actor/rel,value);put(self.run/'export-receipt/byte-exact'/name,value)
         put(self.run/'scoring/summary.json',dict(status='complete',parent_replay_exact=True,validated_tensors=824,alignment=.1,direct_lookahead=.09))
-        put(self.run/'scoring/local-audit.json',dict(status='passed'))
         put(self.run/'scoring/manifest.json',dict(status='complete',plan=dict(candidate_dir=str(self.actor),parent_model='/parent/model.pt',
             artifact_sha256={str(self.actor/'delta/manifest.json'):sha(self.actor/'delta/manifest.json')})))
+        for name in ['alignment.json','parent-score.json','candidate-score.json']:
+            put(self.run/'scoring'/name,{'fixture':True})
+        put(self.run/'scoring/local-audit.json',dict(status='passed',files={p.name:sha(p) for p in (self.run/'scoring').iterdir()}))
     def tearDown(self):self.tmp.cleanup()
     def clean(self,live=False):return release(self.run,temporary_base=self.base,no_live_workers=lambda:not live)
     def test_release_retains_inputs_and_scores_and_is_idempotent(self):
@@ -45,6 +47,13 @@ class CleanupTests(unittest.TestCase):
     def test_missing_score_audit_prevents_release(self):
         (self.run/'scoring/local-audit.json').unlink()
         with self.assertRaises(ValueError):self.clean()
+    def test_score_changed_after_audit_prevents_release(self):
+        self.put(self.run/'scoring/parent-score.json',{'changed':True})
+        with self.assertRaisesRegex(ValueError,'changed after independent audit'):self.clean()
+        self.assertTrue(self.scratch.exists())
+    def test_status_only_audit_prevents_release(self):
+        self.put(self.run/'scoring/local-audit.json',{'status':'passed'})
+        with self.assertRaisesRegex(ValueError,'lacks file identities'):self.clean()
     def test_other_candidate_score_prevents_release(self):
         p=self.run/'scoring/manifest.json';x=json.loads(p.read_text());x['plan']['candidate_dir']='/other/candidate';self.put(p,x)
         with self.assertRaises(ValueError):self.clean()

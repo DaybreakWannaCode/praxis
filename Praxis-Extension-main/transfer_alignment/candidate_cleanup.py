@@ -54,6 +54,14 @@ def release(persistent, *, temporary_base, no_live_workers):
         raise ValueError('Scoring is nonfinite')
     if not (persistent/'scoring/local-audit.json').exists() or json.loads((persistent/'scoring/local-audit.json').read_text()).get('status')!='passed':
         raise ValueError('Independent score archive audit is required')
+    audited=json.loads((persistent/'scoring/local-audit.json').read_text()).get('files',{})
+    required={'summary.json','manifest.json','alignment.json','parent-score.json','candidate-score.json'}
+    if not required.issubset(audited):raise ValueError('Score audit lacks file identities')
+    for name,expected in audited.items():
+        if Path(name).name!=name or name=='local-audit.json':raise ValueError('Invalid audited score path')
+        path=persistent/'scoring'/name
+        if path.is_symlink() or not path.is_file() or sha(path)!=expected:
+            raise ValueError('Scoring changed after independent audit')
     score_manifest=json.loads((persistent/'scoring/manifest.json').read_text())
     if score_manifest.get('status')!='complete' or Path(score_manifest['plan']['candidate_dir']).resolve()!=(scratch/'exports/global_step_1/actor').resolve():
         raise ValueError('Scores belong to another candidate')
