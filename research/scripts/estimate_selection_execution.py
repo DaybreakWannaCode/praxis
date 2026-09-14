@@ -35,8 +35,12 @@ def estimate(root, endpoint=None):
         r['load_dot_seconds'] + r['score_seconds'] + r['dev_seconds']
         for r in probe['results'])
     evaluations = {'old_parent': old}
+    command_overhead = 0.
     if endpoint:
         evaluations['ordinary_endpoint'] = read(Path(endpoint))
+        timing = read(Path(endpoint).with_name('command-timing.json'))
+        command_overhead = timing['command_seconds'] - evaluations['ordinary_endpoint']['elapsed_seconds']
+        assert command_overhead >= 0
     rate = 1.59  # frozen live receipt; not a claim of a current market quote
     scenarios = []
     for pools in [1, 3]:
@@ -53,6 +57,7 @@ def estimate(root, endpoint=None):
                     'nine_checkpoint_audits': 9 * audit['elapsed_seconds'],
                     'final_test_parent_plus_nine_models': final,
                     'ordinary_before_after_dev_and_shuffle': development,
+                    'evaluation_command_overhead': 12 * command_overhead,
                 }
                 hours = sum(components.values()) / 3600
                 scenarios.append(dict(pools=pools, candidates=128*pools,
@@ -63,7 +68,7 @@ def estimate(root, endpoint=None):
                     compute_usd=hours*rate, contingency_25pct_hours=hours*1.25,
                     contingency_25pct_usd=hours*rate*1.25))
     return dict(status='conditional estimate, not a launch authorization',
-        endpoint_measured=bool(endpoint), frozen_compute_usd_per_hour=rate,
+        endpoint_measured=bool(endpoint), evaluation_command_overhead_seconds=command_overhead, frozen_compute_usd_per_hour=rate,
         source_sha256=sources,
         shared_visual_setup_gradient_and_restore_seconds=shared,
         mean_archived_load_check_dot_apply_seconds=avg_load,
