@@ -2,7 +2,7 @@
 
 The planned 32-step, one-pass original-Praxis baseline completed with exit 0. Both scheduled saves and final text validation completed, the supervisor reported no remaining owned processes, and a live GPU-process query was empty. The final logs and timing summary are backed up locally under `runs/ordinary-baseline-20260914/completed`.
 
-The separate full checkpoint hash/load/finiteness audit is still running. This report establishes completed execution and timing, not yet that audit's success or any visual-transfer benefit.
+The separate full checkpoint audit subsequently passed: 28 files hashed, both model and Adam states loaded on CPU with finite tensors, optimizer counters exactly 16 and 32, and scheduler/RNG state present. It took 849.938 s (14.17 minutes), separate from the baseline runtime. This is not a fresh-rollout replay or a visual-transfer result. The audit is backed up as `completed/checkpoint-audit.json`.
 
 | Component | Measured wall time |
 |---|---:|

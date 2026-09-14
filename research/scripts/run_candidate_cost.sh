@@ -21,12 +21,19 @@ if record.get('status')!='complete' or record.get('exit')!=0 or record.get('tagg
     raise SystemExit('Baseline has not completed and cleaned up successfully')
 if (baseline/'run.exit').read_text().strip()!='0':
     raise SystemExit('Baseline exit artifact is not successful')
+audit_report=json.loads((baseline/'completion-audit/report.json').read_text())
+if audit_report.get('status')!='passed' or audit_report.get('training_steps')!=32:
+    raise SystemExit('Complete baseline checkpoint audit is required')
 for step in (16,32):
+    if audit_report['checkpoints'][str(step)]['optimizer_step']!=step:
+        raise SystemExit('Audited optimizer counters do not match the parent trajectory')
     actor=baseline/f'checkpoints/global_step_{step}/actor'
     for kind in ('model','optim','extra_state'):
         f=actor/f'{kind}_world_size_1_rank_0.pt'
         if not f.is_file() or f.stat().st_size==0:
             raise SystemExit('Missing parent or endpoint checkpoint: '+str(f))
+        if audit_report['files'][str(f.relative_to(baseline))]['bytes']!=f.stat().st_size:
+            raise SystemExit('Checkpoint size changed after audit')
 gpu=subprocess.check_output(['nvidia-smi','--query-compute-apps=pid','--format=csv,noheader'],text=True).strip()
 if gpu: raise SystemExit('GPU is occupied; do not launch a competing cost run')
 receipt=json.loads(pathlib.Path('/workspace/praxis/data/ordinary-baseline-20260914/verified-storage.json').read_text())
@@ -63,6 +70,7 @@ cp /workspace/praxis/data/candidate-cost-20260914/config.yaml "$PRAXIS_CANDIDATE
 cp /workspace/praxis-candidate-throughput/telemetry-source-manifest.json "$PRAXIS_CANDIDATE_COST_DIR/"
 cp /workspace/praxis/data/candidate-cost-20260914/audit.json "$PRAXIS_CANDIDATE_COST_DIR/data-audit.json"
 cp /workspace/praxis/research/candidate_cost_source_lock_20260914.json "$PRAXIS_CANDIDATE_COST_DIR/extension-source-lock.json"
+cp /workspace/praxis/runs/ordinary-baseline-20260914/completion-audit/report.json "$PRAXIS_CANDIDATE_COST_DIR/parent-checkpoint-audit.json"
 export PRAXIS_THROUGHPUT_EVENTS="$PRAXIS_CANDIDATE_COST_DIR/events.jsonl"
 export PRAXIS_THROUGHPUT_METRICS="$PRAXIS_CANDIDATE_COST_DIR/metrics.jsonl"
 python /workspace/praxis/research/scripts/launch_ordinary_baseline.py --directory "$PRAXIS_CANDIDATE_COST_DIR" --hours 2

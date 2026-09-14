@@ -1,6 +1,10 @@
 # One fresh candidate: cost measurement plan
 
-Implementation and persistent inputs prepared; not launched. Ordinary baseline training must finish, release its GPU processes, and pass its checkpoint audit first. This is one candidate, not the 128-batch pool or a selection experiment.
+The single candidate cost run has been launched after the baseline completed, released its GPU processes, and passed the checkpoint audit. This is one candidate, not the 128-batch pool or a selection experiment. Subsequent launch requirements below document the guards that passed.
+
+Live launch record: tmux `praxis-candidate-cost`, worker PID 55088 observed initializing, supervisor owner `a171a2de236d4e789fd2497864fb7ba5`, two-hour cap. Output `/workspace/praxis/runs/candidate-cost-20260914-001`; launch timestamp 1789349077.4425857. Preflight found 210,493,066,752 bytes used and reserved a conservative 37,895,799,740 bytes within the verified 250 GB quota. No candidate result or timing is complete yet.
+
+The baseline finished at timestamp 1789332776.3387136. The gap before this candidate launch is 16,301.104 s (4.528 hours); only 849.938 s is currently attributed to the checkpoint audit. The remaining gap is unclassified elapsed time, not measured training or measured hands-on engineering. If the pod was billed continuously, that gap also incurs compute rental charges; historical billing has not been audited. Keep it visible in the eventual execution ledger rather than folding it into per-step throughput.
 
 Prepared on the pod: `/workspace/praxis/data/candidate-cost-20260914` and isolated source `/workspace/praxis-candidate-throughput`. Config SHA-256: `149615d99b8c1757d83339d4a3489b513ff0a43319f2a37225b71fe3371e0d8c`. Intended run directory: `/workspace/praxis/runs/candidate-cost-20260914-001`. Launcher: `research/scripts/run_candidate_cost.sh`, which refuses an incomplete baseline, occupied GPU, changed data/config/source or insufficient quota headroom. Preparation did not require or launch a model.
 
