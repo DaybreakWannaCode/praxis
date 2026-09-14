@@ -1,0 +1,9 @@
+# Full original-worker restore-only audit
+
+Prepared a separate copy of original Praxis under `/workspace/praxis-restore-only-20260915/original`, with only opt-in restore-only hook additions. Its private plan records hashes of source, configuration and audit modules. Parent is the existing ordinary-baseline step-16 full checkpoint. The original worker initialization and original checkpoint load remain in use. `fit` calls the original driver's `_load_checkpoint`, validates the loaded-state receipt, then returns. The manager compares all model/Adam/scheduler/RNG values with saved state immediately after loading. Saving is explicitly prohibited. No candidate-export hooks, rollouts, updates or new full checkpoints are allowed.
+
+Six local tests passed for the comparator and restore-only guards. The supervisor was launched in tmux session `praxis-restore-only` with a 1,800-second cap. It tags its child processes, terminates only those tagged descendants on completion/timeout, and writes launcher/exit receipts. A passed worker receipt alone does not prove clean overall completion: require successful driver receipt, launcher exit 0 and no tagged workers remaining.
+
+Remote run root: `/workspace/praxis-restore-only-20260915`. The live run has not yet produced a verified terminal result. Do not launch another copy because startup or observation is slow; inspect its actual process and receipts. The 30-minute cap includes original model/reference/rollout-engine initialization and full saved-state comparison. No change to the scientific experiment scope or full-matrix authorization is implied.
+
+Remaining after a successful restore-only result: subsequent update/rollout replay is not tested here, nor is new-checkpoint publication with the real worker. Historical files remain protected; no archive destination with sufficient verified capacity exists yet. This run is a restoration audit, not transfer evidence.
