@@ -30,3 +30,11 @@ The export contains 824 canonical tensors, 3,754,622,976 unique coordinates, and
 The frozen producer reserialized the manifest when saving its durable receipt, dropping a trailing newline. The audit verified semantic equality and saved additional byte-exact receipts without overwriting the original evidence. Future producers now copy receipt bytes directly; the fix is committed as d73d9ea. This metadata issue did not require retraining.
 
 The 6.60 GB scratch export is still retained pending scoring and its independent audit. No historical artifact has been deleted. Candidate integration passed; the complete score-and-release lifecycle remains pending.
+
+## Second candidate preparation
+
+A second 32-prompt batch is frozen under `data/candidate-input-capture-20260915-002` on the pod. It uses the next eligible entries in the fixed source-hash order after excluding the first candidate and baseline train/validation indices, exclusions, and normalized situations. The preparation audit reports zero exact normalized-scene overlap; this is not a semantic/paraphrase or external scene-level audit. No visual score was used to select this batch. Its frozen data/config/audit are also backed up locally.
+
+`run_second_capture.sh` requires the first candidate's completed cleanup journal and absent scratch, then repeats free-GPU, frozen-file and storage-reserve checks. It registers scratch ownership at creation. It retains the same isolated source snapshot and the same audited step-16 parent. Preparation does not launch training.
+
+The cleanup helper now binds its decision to the hashes of independently audited score files, rejecting post-audit changes. Ten tests passed. The live controller additionally requires successful scoring exit, verified local input-backup identities, no tagged trainer workers, no live compact scorer, and an idle GPU. These guards do not replace the outstanding actual score-and-release test.
