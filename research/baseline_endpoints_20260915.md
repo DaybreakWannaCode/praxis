@@ -21,3 +21,7 @@ The shared mount reports cluster-wide capacity, so the launcher counts unique fi
 ## Launch record
 
 Plan SHA-256 `8f0db76d4e2c6ddc3f4d865bf70aae7c625791ceaa802b49d86048750f4d99bc` freezes 88 artifacts. Its local backup and the three deployed evaluator module hashes were independently checked. Initial evaluation was submitted to tmux `praxis-baseline-initial`; launcher PID 74651 and quota-preflight PID 74653 were verified live. This is a launch record, not completed evaluation. Final endpoint is not launched. Monitor the existing process and persistent logs before any restart.
+
+## Initial runtime evidence
+
+The initial endpoint passed the quota guard (214,516,974,592 accounted bytes) and was verified live as PID 74687. A local checksum-verified partial archive contains the first 31 responses plus the plan and endpoint manifest (245,760 bytes total). All backed-up responses include sequence tokens and prompt lengths. Their mean generation time is 9.187 seconds, median 9.600 and maximum 12.573; startup was 34.243 seconds. Extrapolating 289 generations gives about 44.8 minutes for this endpoint, conditional on this partial timing sample. Final-checkpoint response timing remains unknown. No endpoint accuracy analysis or selection decision was made from these partial outputs. The two-hour endpoint cap remains unchanged.
