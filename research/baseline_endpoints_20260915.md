@@ -17,3 +17,7 @@ Analyze paired correct-image accuracy, parse failures and truncation, and the 32
 Primary reporting is the paired accuracy difference on all 256 correct-image examples, with the four before/after correctness transition counts. Report a paired image-bootstrap 95% interval using 10,000 draws and fixed seed 20260915, explicitly conditional on this panel and single training trajectory. Report parser and truncation counts separately; do not remove failed parses or truncated responses after observing outcomes. For the preselected 32 controls, report correct-minus-shuffled accuracy at each model and its change. These small control estimates are diagnostic. Scene-proxy grouping is not verified independence of underlying scenes.
 
 The shared mount reports cluster-wide capacity, so the launcher counts unique file inodes using the larger of logical and allocated bytes against the recorded 250,000,000,000-byte purchased quota. It preserves 16 GiB of headroom. No historical deletion is performed.
+
+## Launch record
+
+Plan SHA-256 `8f0db76d4e2c6ddc3f4d865bf70aae7c625791ceaa802b49d86048750f4d99bc` freezes 88 artifacts. Its local backup and the three deployed evaluator module hashes were independently checked. Initial evaluation was submitted to tmux `praxis-baseline-initial`; launcher PID 74651 and quota-preflight PID 74653 were verified live. This is a launch record, not completed evaluation. Final endpoint is not launched. Monitor the existing process and persistent logs before any restart.
