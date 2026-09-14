@@ -11,3 +11,9 @@ Before launch, freeze the exact source snapshot, all pretrained model files, fin
 Three orchestration tests passed: interrupted/resumed response preservation, changed model artifact rejection, and changed saved item identity rejection. They use a fake backend and do not establish model correctness. No independent endpoint has been launched by this change. The full selection matrix remains unlaunched.
 
 Analyze paired correct-image accuracy, parse failures and truncation, and the 32-example image-shuffling comparison. Treat image groups as scene proxies and disclose assistant-only visual review. A single adapted baseline trajectory cannot establish selection benefit.
+
+## Locked analysis and storage guard
+
+Primary reporting is the paired accuracy difference on all 256 correct-image examples, with the four before/after correctness transition counts. Report a paired image-bootstrap 95% interval using 10,000 draws and fixed seed 20260915, explicitly conditional on this panel and single training trajectory. Report parser and truncation counts separately; do not remove failed parses or truncated responses after observing outcomes. For the preselected 32 controls, report correct-minus-shuffled accuracy at each model and its change. These small control estimates are diagnostic. Scene-proxy grouping is not verified independence of underlying scenes.
+
+The shared mount reports cluster-wide capacity, so the launcher counts unique file inodes using the larger of logical and allocated bytes against the recorded 250,000,000,000-byte purchased quota. It preserves 16 GiB of headroom. No historical deletion is performed.
