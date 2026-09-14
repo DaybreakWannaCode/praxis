@@ -39,7 +39,7 @@ class CheckpointStore:
         if owner['version']!=1:raise ValueError('Unknown store version')
         self.owner=owner['owner']
 
-    def publish(self, step, write, validate):
+    def publish(self, step, write, validate, *, before_retire=None):
         if not isinstance(step,int) or step<0:raise ValueError('Invalid checkpoint step')
         pointer=self.root/'latest.json'
         previous=json.loads(pointer.read_text()) if pointer.exists() else None
@@ -73,6 +73,9 @@ class CheckpointStore:
             published=True
             sync_directory(self.root)
             atomic_json(pointer,dict(owner=self.owner,step=step,path=destination.name))
+            # A downstream resume tracker must also publish before retirement.
+            if before_retire is not None:
+                before_retire(destination)
             # Publication and pointer succeed BEFORE retiring the previous copy.
             if previous:
                 old=self.root/previous['path']
