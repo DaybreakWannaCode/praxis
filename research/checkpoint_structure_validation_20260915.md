@@ -17,3 +17,9 @@ Added `checkpoint_quota.py`, a preflight callback compatible with the save adapt
 Four filesystem tests passed: sparse-file accounting, hard-link deduplication, the exact replacement-plus-reserve boundary, and refusal of an out-of-volume store. This guard does not establish a safe production replacement bound; that must be chosen from measured complete checkpoint sizes with headroom before a launch.
 
 Local archive check during this stage found approximately 17.26 GB free on the Mac, with no external volume mounted. That is insufficient for one roughly 41.27 GB full recovery checkpoint. No large archive transfer or deletion was attempted. The running read-only structural audit was rechecked at 3 minutes 21 seconds (Python PID 76933 still live); its ten-minute cap remains unchanged. No duplicate audit was launched.
+
+## Terminal real-checkpoint result
+
+The real step-32 audit completed with status `passed` in 393.681 seconds (6.56 minutes), within its original cap. It checked 825 saved model tensors (including the tied alias), 69 optimizer entries with 37 populated Adam states, optimizer step 32 and scheduler epoch 32. The report and reference schema were copied locally to `runs/checkpoint-structure-validation-20260915/`. Local verification matched the schema SHA-256 `30d6d4b7b960ea5e96afe361516a4749a866a74e69e694da4be9348b843e2428` and validator SHA-256 `7ba496e9cd6b12769140e3353d4fd24bead72b1261fdd066a28ec8db19f8e457` to the completed remote result.
+
+This supersedes all live-process snapshots above: the audit computation is complete, not awaiting restart. Existing model/optimizer files were only read. The result establishes CPU structural/finite-state validation against the step-16 schema and isolated CPU/NumPy/Python RNG loadability. CUDA RNG restoration and actual worker/dataloader continuation remain untested. No real-worker save/resume claim or historical-checkpoint deletion follows from this pass.
