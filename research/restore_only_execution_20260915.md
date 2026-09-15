@@ -4,9 +4,9 @@ Prepared a separate copy of original Praxis under `/workspace/praxis-restore-onl
 
 Six local tests passed for the comparator and restore-only guards. The supervisor was launched in tmux session `praxis-restore-only` with a 1,800-second cap. It tags its child processes, terminates only those tagged descendants on completion/timeout, and writes launcher/exit receipts. A passed worker receipt alone does not prove clean overall completion: require successful driver receipt, launcher exit 0 and no tagged workers remaining.
 
-Remote run root: `/workspace/praxis-restore-only-20260915`. The live run has not yet produced a verified terminal result. Do not launch another copy because startup or observation is slow; inspect its actual process and receipts. The 30-minute cap includes original model/reference/rollout-engine initialization and full saved-state comparison. No change to the scientific experiment scope or full-matrix authorization is implied.
+Remote run root: `/workspace/praxis-restore-only-20260915`. The run is complete; the verified terminal result is below. Do not restart this audit. The 30-minute cap includes original model/reference/rollout-engine initialization and full saved-state comparison. No change to the scientific experiment scope or full-matrix authorization is implied.
 
-Remaining after a successful restore-only result: subsequent update/rollout replay is not tested here, nor is new-checkpoint publication with the real worker. Historical files remain protected; no archive destination with sufficient verified capacity exists yet. This run is a restoration audit, not transfer evidence.
+Remaining after the successful restore-only result: subsequent update/rollout replay is not tested here, nor is new-checkpoint publication with the real worker. Historical files remain protected; no archive destination with sufficient verified capacity exists yet. This run is a restoration audit, not transfer evidence.
 
 ## Completed result
 
