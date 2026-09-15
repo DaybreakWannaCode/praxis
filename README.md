@@ -8,10 +8,29 @@ and an **actual** text optimizer displacement. Cosine and norms are diagnostics.
 
 ## Current status
 
-September 15: [compact candidate scoring passed](research/compact_choice_result_20260915.md).
-The [storage strategy](research/storage_strategy_20260915.md) targets a bounded working set
-instead of retaining every candidate update. The 250 GB option requires verified archival;
-full lifecycle/trainer integration remains pending. No historical artifacts were deleted.
+September 15: the [independent visual baseline](research/independent_baseline_result_20260915.md)
+is complete: greedy accuracy changed from 201/256 to 203/256 (+0.78 percentage
+points; paired 95% interval −1.95 to +3.91 points). This is inconclusive, not a
+confirmed transfer benefit. The reserved final test remains unused.
+
+Two actual candidate lifecycles retained about 34.3 MB after releasing about
+13.18 GB of managed temporary exports. The [storage strategy](research/storage_strategy_20260915.md)
+bounds candidate accumulation; it does not yet make full training fit alongside
+historical artifacts on the 250 GB volume. No historical checkpoint was deleted.
+
+[Original-worker restoration](research/restore_only_execution_20260915.md) passed
+exact model/Adam/scheduler/RNG value comparison. Separate original-manager RNG
+and original-dataloader continuation checks also passed; see
+[validation evidence](research/checkpoint_structure_validation_20260915.md).
+The [save adapter and interrupted-publication inspection](research/checkpoint_adapter_progress_20260915.md)
+have local tests, but real-worker checkpoint publication and post-restore update
+or rollout replay remain unverified.
+
+The [revised cost/scope decision](research/selection_reassessment_20260915.md)
+compares 64- and 128-candidate studies. The smaller two-arm proposal keeps three
+paired seeds and 32 training updates per arm. It is not launched: final protocol,
+storage capacity and total compute budget remain unresolved. No independent
+alignment-prediction or beneficial selection result is established.
 
 September 14: the bounded likelihood and execution-cost checks are complete. A
 single-A100, full-parameter, adapted original-Praxis baseline finished 32 updates;
