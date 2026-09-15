@@ -5,6 +5,9 @@ Repository: https://github.com/DaybreakWannaCode/praxis
 
 The primary quantity is the inner product between an expected-visual-correctness gradient
 and an **actual** text optimizer displacement. Cosine and norms are diagnostics.
+The later likelihood probe targets a different surrogate; see the
+[methods and estimand distinction](research/paper_methods_draft.md). Its gradient
+is not a gradient of greedy accuracy or expected generated-answer correctness.
 
 ## Current status
 

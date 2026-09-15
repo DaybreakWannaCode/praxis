@@ -1,11 +1,84 @@
 # Working methods text — development draft
 
-This draft defines the study; it does not claim completed prediction or selection
-results. The full-parameter fixed-input observer gate and two-candidate visual
-integration have passed. A separately frozen four-candidate development precision
-check is queued; its result and horizon decision remain open. The development
-scene audit is complete within its stated limits. Confirmatory design and
-final-test splits are not frozen by this engineering milestone.
+Updated September 15. The sections beginning “Original expected-correctness methods”
+retain the earlier protocol for provenance; they are not a frozen specification of
+the next experiment. H1/H4 development is closed as inconclusive. Independent
+prediction and beneficial data selection have not been established. The next
+study's endpoint, complete compute allocation and storage plan remain unresolved.
+
+## Current estimands and implementation
+
+Three quantities must remain distinct in the paper:
+
+1. **Expected generated-answer correctness**, $J_R(\theta)$, is the expectation
+   of binary parsed correctness under a specified sampled response policy. This
+   was the target of the original leave-one-out gradient estimator below.
+2. **Normalized label-prefix log likelihood**, $J_L(\theta)$, is the deterministic
+   differentiable surrogate implemented by `choice_probe.py`. It is measured with
+   an image and question/options under a label-only system prompt, without a
+   generated reasoning completion. For permitted, prefix-free tokenized labels
+   $c\in C(z)$, define
+   $$
+   \ell_\theta(c;z)=\sum_{k=1}^{|c|}\log\pi_\theta(c_k\mid z,c_{<k}),\qquad
+   q_\theta(c\mid z)=\frac{\exp\ell_\theta(c;z)}{
+     \sum_{b\in C(z)}\exp\ell_\theta(b;z)},\qquad
+   J_L(\theta)=\frac1n\sum_i\log q_\theta(a_i^\star\mid z_i).
+   $$
+   EOS is not appended. This normalizes label-prefix likelihoods over permitted
+   choices; it is not the probability of a correct complete reasoning response.
+   For single-token labels the full-vocabulary softmax normalizer cancels. The
+   implementation sums multi-token prefix log probabilities without token-length
+   averaging and performs the choice normalization in float64.
+3. **Greedy extracted accuracy**, $G(\theta)$, is the empirical binary correctness
+   of one deterministic completion per image under the frozen reasoning/answer
+   prompt and parser. It is the endpoint of the completed ordinary baseline.
+   It is neither the sampled expectation $J_R$ nor the surrogate $J_L$.
+
+For the realized text displacement $u=\theta_{\mathrm{child}}-\theta_{\mathrm{parent}}$,
+the current likelihood score is $A_L=\nabla J_L(\theta)^\top u$. The local expansion
+of $J_L$ motivates prediction of a change in that *same* surrogate. It does not
+mathematically imply a gain in $J_R$ or $G$, particularly because the prompt and
+response policy differ. Greedy decoded correctness is discontinuous at decision
+boundaries; do not assign it the likelihood gradient or apply the smooth Taylor
+argument directly to its observed accuracy.
+
+Independent-panel likelihood prediction would additionally test generalization
+from the visual scoring panel to the outcome panel. Independent generated-answer
+prediction would test a further cross-objective relationship. The latter was not
+included in the initial intervention-only cost forecast; see
+[corrected scope and cost](selection_reassessment_20260915.md). Choosing the
+surrogate endpoint would need an explicit change in the paper's claimed estimand,
+not merely different notation for the original expected-correctness claim.
+
+## Completed evidence and claim limits
+
+The adapted ordinary baseline used 1,024 text prompts, five rollouts per prompt,
+32 updates and one seed. Its independent development accuracy changed from
+201/256 to 203/256: +0.78 percentage points, paired image-bootstrap 95% interval
+[−1.95,+3.91]. This is unresolved and conditional on the panel/trajectory, not a
+seed-robust transfer result. See [baseline result](independent_baseline_result_20260915.md)
+and [figure caption](independent_baseline_figure_20260915.md).
+
+Two original-worker candidate lifecycles verified displacement construction,
+likelihood scoring and bounded temporary retention. Their same-probe local
+surrogate agreement is numerical calibration, not independent prediction or a
+selection intervention. Original-worker loaded model/Adam/scheduler/RNG equality
+and separate dataloader continuation passed; these checks do not prove arbitrary
+post-restore rollout replay. See [restoration evidence](restore_only_execution_20260915.md).
+
+The proposed smaller selection comparison is Alignment versus Random with three
+paired training seeds, a shared static pool of 64 candidate batches and 32 selected
+batches per arm. It has not launched or been frozen as the complete paper design.
+A two-arm result cannot establish superiority over cosine selection. Visual
+calibration is supervised adaptation data even though subsequent optimizer
+updates use text only. Equal-update gains are not equal-total-compute gains.
+
+## Original expected-correctness methods (historical protocol)
+
+The following text describes the original RLOO/precision protocol and preserves
+its mathematical estimator and branch controls. References to queued precision
+checks, an H4 fallback, or three selection arms below are historical proposals;
+the current status and unresolved choices above take precedence.
 
 ## Question and objectives
 
