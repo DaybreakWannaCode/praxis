@@ -56,6 +56,7 @@ def build_selection(rows, *, seeds, pool_size=64, selected_batches=32, prompts_p
         for name,members in [('alignment',aligned),('random',random_ids)]:
             training_order=sorted(members,key=lambda c:order_key('training-order',seed,c))
             arms.append(dict(selector=name,seed=seed,candidate_ids=training_order,
+                batch_prompt_ids=[list(by_id[c]['prompt_ids']) for c in training_order],
                 prompt_ids=[p for c in training_order for p in by_id[c]['prompt_ids']]))
     return dict(version=1,status='selection_manifest_only',pool_size=pool_size,
         selected_batches=selected_batches,prompts_per_batch=prompts_per_batch,
@@ -73,3 +74,32 @@ def save_selection(manifest, path):
     path=Path(path)
     with path.open('xb') as stream:
         stream.write(encoded(manifest)+b'\n');stream.flush();os.fsync(stream.fileno())
+
+
+def validate_training_handoff(manifest, *, selector, seed, ordered_prompt_ids, config):
+    """Validate actual dataset order and effective original-trainer configuration.
+
+    Invoke before model initialization. Does not validate prompt contents against
+    source hashes; source/receipt integrity must already have passed upstream.
+    """
+    matches=[a for a in manifest['arms'] if a['selector']==selector and a['seed']==seed]
+    if len(matches)!=1:raise ValueError('Exactly one sealed arm required')
+    arm=matches[0];size=manifest['prompts_per_batch'];steps=manifest['selected_batches']
+    batches=arm['batch_prompt_ids']
+    if len(batches)!=steps or any(len(b)!=size for b in batches):
+        raise ValueError('Sealed batch shape differs')
+    flat=[p for batch in batches for p in batch]
+    if len(set(flat))!=len(flat) or flat!=arm['prompt_ids'] or list(ordered_prompt_ids)!=flat:
+        raise ValueError('Dataset order or sealed batch membership changed')
+    if len(arm['candidate_ids'])!=steps or len(set(arm['candidate_ids']))!=steps:
+        raise ValueError('Invalid selected candidate coverage')
+    if config.data.shuffle is not False:
+        raise ValueError('Prompt-level shuffle destroys selected candidate batches')
+    if config.data.rollout_batch_size!=size or config.worker.actor.global_batch_size!=size:
+        raise ValueError('Rollout/optimizer batch must match scored candidate size')
+    if config.worker.actor.ppo_epochs!=1 or config.worker.rollout.n!=5:
+        raise ValueError('Expected one actor epoch and five fresh rollouts per prompt')
+    if config.trainer.max_steps!=steps or config.trainer.total_episodes!=1:
+        raise ValueError('Expected one pass over sealed batches')
+    return dict(status='passed',selector=selector,seed=seed,batches=steps,prompts=len(flat),
+        scope='Sealed membership/order and configured training budget; runtime update count and fresh rollout provenance still require auditing')
