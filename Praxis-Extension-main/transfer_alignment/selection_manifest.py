@@ -62,6 +62,7 @@ def build_selection(rows, *, seeds, pool_size=64, selected_batches=32, prompts_p
         selected_batches=selected_batches,prompts_per_batch=prompts_per_batch,
         score_pool_sha256=hashlib.sha256(encoded(ordered)).hexdigest(),
         parent_sha256=ordered[0]['parent_sha256'],objective=ordered[0]['objective'],
+        seed_scope='Batch membership/order only; worker and rollout RNG policy not established by this manifest',
         calibration_split_sha256=ordered[0]['calibration_split_sha256'],
         scoring_protocol_sha256=ordered[0]['scoring_protocol_sha256'],arms=arms,
         contract='Fresh training rollouts required; scores do not authorize reusing tentative child updates; '
