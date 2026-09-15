@@ -53,6 +53,20 @@ def assess(root):
                     candidate_profile=name, seconds=parts, hours=hours,
                     compute_at_historical_1_59=hours*1.59,
                     allowance_25pct_hours=hours*1.25))
+    # Optional full prediction endpoint: a distinct development panel for each
+    # tentative child plus its common parent. Final-model test evaluation above
+    # is on another panel and cannot be reused as the prediction parent outcome.
+    prediction_scenarios = []
+    for scenario in scenarios:
+        extra = (scenario['pool'] + 1) * eval_seconds / 3600
+        total = scenario['hours'] + extra
+        prediction_scenarios.append(dict(
+            pool=scenario['pool'], arms=scenario['arms'], seeds=scenario['seeds'],
+            candidate_profile=scenario['candidate_profile'],
+            independent_candidate_endpoint_hours=extra,
+            intervention_plus_prediction_hours=total,
+            compute_at_historical_1_59=total*1.59,
+            allowance_25pct_compute_at_historical_1_59=total*1.59*1.25))
     # Sensitivity scenarios, not a power guarantee or fitted future discordance.
     sensitivity = []
     for n in (256, 512):
@@ -61,8 +75,11 @@ def assess(root):
                 approximate_95pct_halfwidth_pp=100*1.96*math.sqrt(q/n)))
     return dict(source_sha256=sources, scenarios=scenarios,
         paired_null_sensitivity=sensitivity,
+        intervention_plus_prediction_scenarios=prediction_scenarios,
         limitations=[
             'Forecast only; no launch authorization. Profiles are two timings, not bounds.',
+            'Original scenarios cover intervention only. Independent per-candidate generated outcomes are costed separately.',
+            'Prediction endpoint uses 288-answer timing as a proxy; incremental child reconstruction/verification overhead is unmeasured.',
             'Repeated cold scoring includes probe gradient per candidate; no unmeasured parent-reuse speedup.',
             'Backup, cleanup, engineering, idle time and archive transfer are outside measured component boundaries.',
             'Evaluation uses full measured 288-answer jobs as a budgeting proxy, not a locked test-panel design.',

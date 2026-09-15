@@ -2,7 +2,7 @@
 
 The completed ordinary baseline is inconclusive, not a failed prerequisite proving that selection cannot work. Preserve its fixed analysis. The paper still needs independent prediction and a useful intervention; two same-probe likelihood checks do not meet either requirement.
 
-## Concrete cost comparison
+## Concrete cost comparison: intervention only
 
 Recomputed from both completed candidate lifecycles and the completed 288-answer endpoints using `scripts/reassess_selection_budget.py`. All scenarios retain 32 selected batches, 1,024 prompts, 32 training updates per arm and three paired seeds. Each pool is constructed once and shared across seeds. Candidates use a common warm parent, as do the subsequent fresh-rollout training arms. The old pretrained-to-step32 baseline is not the warm-parent random control and cannot replace it.
 
@@ -42,3 +42,13 @@ Two real candidate lifecycles have demonstrated small durable evidence plus boun
 Next implementation work is safe checkpoint publication in the original training path and verification of a real archival destination. The tested standalone publication helper is not yet proof of original-trainer integration. Preserve historical checkpoint files until an independently verified destination copy exists; no deletion or volume enlargement is authorized by this document. Full-fidelity optimizer state cannot be replaced by a displacement or a score receipt.
 
 Decision: hold the full sweep. Advance the checkpoint/archive integration and freeze a concrete prediction-plus-intervention protocol, test inventory and total budget before another scientific GPU launch. The reduced cost table is a decision artifact, not a launch instruction. No extra H1/H4 sampling, early-stopping experiment, prompt tuning or final-test inspection follows from the inconclusive baseline.
+
+## Correction: independent candidate outcomes were not included
+
+The table above includes calibration scoring and final trained-model outcomes. It does **not** include independent generated-answer evaluation of every tentative candidate for the paper's predictive-validity experiment. Consequently the proposed $150 additional compute cap was an intervention-only allowance, not a complete prediction-plus-intervention budget. No spend or storage expansion was performed in response to that proposal.
+
+The revised calculator now reports these scopes separately. Using the measured 288-answer endpoint job as a proxy for each of 64 child models plus one common parent on a distinct development panel adds 49.986 allocated hours. The two measured candidate profiles then project 108.57–114.22 hours total, or $172.63–181.61 at the historical $1.59/hour rate. A 25% allowance gives $215.79–227.01. Storage, engineering, idle time and unmeasured additional child-reconstruction/verification overhead remain excluded. These are planning projections, not confidence bounds or authorization. The endpoint panel size and decoding policy are still to be frozen; the 288-answer job is a cost proxy, not a required study design.
+
+This correction does not justify increasing sampling or repeating the closed H1/H4 study. Nor can same-calibration likelihood agreement be relabeled independent visual prediction to fit the smaller budget. A disjoint likelihood outcome is a legitimate *surrogate* prediction endpoint if declared as such, with generated-answer improvement tested by the intervention; it supports a narrower estimand than predicting expected visual correctness. Freeze that scientific distinction before committing the full compute allocation.
+
+Private reproducible output: `runs/selection-reassessment-20260915/with-prediction-estimate.json`. The earlier estimate is retained unchanged for provenance. The full study remains unlaunched; the previous pending spending question must not be interpreted as approval for this larger scenario.
