@@ -5,17 +5,64 @@ Repository: https://github.com/DaybreakWannaCode/praxis
 
 The primary quantity is the inner product between an expected-visual-correctness gradient
 and an **actual** text optimizer displacement. Cosine and norms are diagnostics.
+The later likelihood probe targets a different surrogate; see the
+[methods and estimand distinction](research/paper_methods_draft.md). Its gradient
+is not a gradient of greedy accuracy or expected generated-answer correctness.
 
 ## Current status
 
-Engineering milestone: a CPU synthetic backend and a single-GPU Qwen2.5-VL-3B LoRA
-backend share an estimator, optimizer/state restoration, sequential candidate branches,
-exact dot products, and independent parent/child evaluation. The synthetic backend is
-tested locally. The first real Qwen two-branch smoke test also completed on an H100:
-both branches replayed exactly and independent visual evaluation completed.
-Detailed measurements and run outputs remain in the ignored local runs folder.
-Distributed/full-parameter Praxis parity is not yet verified, and
-this tiny engineering run does not establish a VLM transfer benefit.
+September 25: [failure analysis](research/failure_analysis_20260925.md). The adapted
+text GRPO never activated the reasoning reward. Format reward was 0 in 32/32 steps
+and responses stayed at about 18 tokens, because every released prompt ends
+"Just output the choice:". Visual evaluation, by contrast, elicits about 120-token
+`<think>` responses. The results below therefore measure a letter-only update, not
+Praxis-style reasoning transfer. A prompt-contract option and a training-signal
+gate (`transfer_alignment.training_signal`) are added. The next step is a rollout
+pre-check, not the selection study.
+
+September 15: the [independent visual baseline](research/independent_baseline_result_20260915.md)
+is complete: greedy accuracy changed from 201/256 to 203/256 (+0.78 percentage
+points; paired 95% interval −1.95 to +3.91 points). This is inconclusive, not a
+confirmed transfer benefit. The reserved final test remains unused.
+
+Two actual candidate lifecycles retained about 34.3 MB after releasing about
+13.18 GB of managed temporary exports. The [storage strategy](research/storage_strategy_20260915.md)
+bounds candidate accumulation; it does not yet make full training fit alongside
+historical artifacts on the 250 GB volume. No historical checkpoint was deleted.
+
+[Original-worker restoration](research/restore_only_execution_20260915.md) passed
+exact model/Adam/scheduler/RNG value comparison. Separate original-manager RNG
+and original-dataloader continuation checks also passed; see
+[validation evidence](research/checkpoint_structure_validation_20260915.md).
+The [save adapter and interrupted-publication inspection](research/checkpoint_adapter_progress_20260915.md)
+have local tests, but real-worker checkpoint publication and post-restore update
+or rollout replay remain unverified.
+
+The [revised cost/scope decision](research/selection_reassessment_20260915.md)
+compares 64- and 128-candidate studies. The smaller two-arm proposal keeps three
+paired seeds and 32 training updates per arm. It is not launched: final protocol,
+storage capacity and total compute budget remain unresolved. No independent
+alignment-prediction or beneficial selection result is established.
+
+September 14: the bounded likelihood and execution-cost checks are complete. A
+single-A100, full-parameter, adapted original-Praxis baseline finished 32 updates;
+its step-16/32 model and optimizer checkpoints passed integrity checks. One fresh
+candidate restored the warm parent, advanced the optimizer once and exported an
+exactly reconstructable canonical displacement. Endpoint greedy timing and replay
+also passed. This does not establish a visual-transfer benefit or distributed replay.
+
+The older sampled-correctness H1/H4 study remains inconclusive. The subsequent
+answer-likelihood probe is a smooth surrogate measurement, not proof that likelihood
+alignment predicts generated-answer improvements. No full selection matrix has launched.
+
+See the [execution estimate](research/selection_execution_estimate_20260914.md),
+[fresh-candidate timing](research/candidate_cost_result_20260914.md),
+[baseline timing](research/ordinary_baseline_result_20260914.md),
+[endpoint timing](research/greedy_endpoint_result_20260914.md), and
+[likelihood result](research/choice_probe_result_20260914.md).
+Raw responses, checkpoints and run receipts remain outside Git. Earlier synthetic
+and LoRA smoke infrastructure is retained for debugging; its results are separate
+from the later original-trainer measurements.
 
 Bounded inference calibration and repeated visual-probe diagnostics are available in
 `transfer_alignment.calibrate` and `transfer_alignment.stability`. They do not train
@@ -62,6 +109,6 @@ assigned here on behalf of collaborators.
 ## Git workflow
 
 Keep `main` as reviewed milestones; use focused branches for later changes. Original
-Praxis code paths are not edited by this milestone. Future integration with collaborators
+training computations are retained; opt-in instrumentation uses isolated source copies. Future integration with collaborators
 can use ordinary pull requests or cherry-picks once their target repository is identified.
 Never commit SSH passwords, tokens, run checkpoints or benchmark data.

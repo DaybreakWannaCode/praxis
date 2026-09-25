@@ -85,8 +85,10 @@ def alignment_contrasts(projected, alpha=.05):
     return rows
 
 
-def precision_decision(score_pairs, outcome_pairs, *, resolution=.02, minimum_pairs=4):
+def precision_decision(score_pairs, outcome_pairs, *, resolution=.02, minimum_pairs=4, horizon=1):
     """Frozen exploratory resolution rule; agreement/positive effects not required."""
+    if horizon not in (1, 4):
+        raise ValueError("Unsupported measurement horizon")
     def classify(bounds):
         low,high=bounds
         if not math.isfinite(low+high) or low>high:raise ValueError("Invalid interval")
@@ -104,6 +106,8 @@ def precision_decision(score_pairs, outcome_pairs, *, resolution=.02, minimum_pa
                      'jointly_resolved':a['resolved'] and y['resolved']})
     count=sum(r['jointly_resolved'] for r in rows)
     return {'resolution':resolution,'jointly_resolved_pairs':count,'required_pairs':minimum_pairs,
-            'h1_decision':'retain_H1' if count>=minimum_pairs else 'test_predeclared_H4',
+            ('h1_decision' if horizon == 1 else 'h4_decision'):
+                (f'retain_H{horizon}' if count>=minimum_pairs else
+                 ('test_predeclared_H4' if horizon == 1 else 'bounded_budget_insufficient')),
             'pairs':rows,'main_sweep_authorized':False,
             'caveat':'Exploratory pointwise rule; approximate score intervals; ties do not establish ranking variation'}

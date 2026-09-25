@@ -70,7 +70,7 @@ class PrecisionContractTests(unittest.TestCase):
 
     def test_horizon_cannot_be_relabelled(self):
         self.cfg['horizon']=4
-        with self.assertRaisesRegex(ValueError,'not implemented'):self.check()
+        with self.assertRaisesRegex(ValueError,'Export horizon'):self.check()
 
     def test_different_optimizer_parent_rejected(self):
         path=self.gates[-1]/'parity.json'

@@ -1,4 +1,13 @@
-# Agreed execution scope
+# Original execution scope (historical)
+
+Current-status note (September 15): this is the original September 6 proposal,
+not the next launch specification. H1/H4 is closed as inconclusive. The adapted
+ordinary baseline and restoration checks are complete; the 72-branch prediction
+study and three-selector matrix below have not been executed. See
+[the current scope/cost decision](selection_reassessment_20260915.md),
+[the objective distinctions](paper_methods_draft.md), and
+[the completed baseline](independent_baseline_result_20260915.md).
+Budget, storage capacity and the next prediction endpoint remain unresolved.
 
 6 September 2026. This narrows the master protocol; it does not replace its estimator,
 split, provenance or independence requirements.

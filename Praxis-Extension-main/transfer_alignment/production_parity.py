@@ -65,6 +65,17 @@ def restore(worker, state):
     restore_worker_state(worker, state["worker"], rank=0, world_size=1)
 
 
+def dispatch_parity_gate(worker, data, *, scorer=None):
+    """Select only explicitly supported bounded measurement horizons."""
+    horizon = os.environ.get("PRAXIS_ALIGNMENT_HORIZON", "1")
+    if horizon == "1":
+        return run_fixed_rollout_gate(worker, data, scorer=scorer)
+    if horizon == "4":
+        from .production_horizon import run_four_step_gate
+        return run_four_step_gate(worker, data, scorer=scorer)
+    raise ValueError("Only H=1 and H=4 parity gates are supported")
+
+
 def run_fixed_rollout_gate(worker, data, *, scorer=None):
     if scorer is None:
         from verl.utils.reward_score.mcq import mcq_compute_score
