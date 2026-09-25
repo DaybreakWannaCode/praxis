@@ -11,6 +11,15 @@ is not a gradient of greedy accuracy or expected generated-answer correctness.
 
 ## Current status
 
+September 25: [failure analysis](research/failure_analysis_20260925.md). The adapted
+text GRPO never activated the reasoning reward. Format reward was 0 in 32/32 steps
+and responses stayed at about 18 tokens, because every released prompt ends
+"Just output the choice:". Visual evaluation, by contrast, elicits about 120-token
+`<think>` responses. The results below therefore measure a letter-only update, not
+Praxis-style reasoning transfer. A prompt-contract option and a training-signal
+gate (`transfer_alignment.training_signal`) are added. The next step is a rollout
+pre-check, not the selection study.
+
 September 15: the [independent visual baseline](research/independent_baseline_result_20260915.md)
 is complete: greedy accuracy changed from 201/256 to 203/256 (+0.78 percentage
 points; paired 95% interval −1.95 to +3.91 points). This is inconclusive, not a
